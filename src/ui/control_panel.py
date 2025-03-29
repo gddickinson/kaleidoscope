@@ -1,9 +1,8 @@
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSlider,
                             QComboBox, QPushButton, QCheckBox, QSpinBox,
-                            QColorDialog, QGroupBox, QGridLayout, QApplication)
+                            QColorDialog, QGroupBox, QGridLayout, QApplication, QTabWidget)
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QColor
-
 
 # =============================================================================
 # UI Module: Control Panel
@@ -14,23 +13,45 @@ class ControlPanel(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        # Create layout
+        # Create main layout
         main_layout = QVBoxLayout()
 
-        # Add control groups
-        main_layout.addWidget(self._create_general_controls())
-        main_layout.addWidget(self._create_visual_controls())
-        main_layout.addWidget(self._create_3d_controls())  # New 3D controls
-        main_layout.addWidget(self._create_pulse_controls())  # New pulse controls
-        main_layout.addWidget(self._create_audio_controls())
-        main_layout.addWidget(self._create_display_controls())
+        # Create tab widget for control groups
+        self.tab_widget = QTabWidget()
+
+        # Create tabs for different control categories
+        visual_tab = QWidget()
+        visual_layout = QVBoxLayout()
+        visual_tab.setLayout(visual_layout)
+
+        technical_tab = QWidget()
+        technical_layout = QVBoxLayout()
+        technical_tab.setLayout(technical_layout)
+
+        # Add control groups to Visual tab
+        visual_layout.addWidget(self._create_general_controls())
+        visual_layout.addWidget(self._create_visual_controls())
+        visual_layout.addWidget(self._create_display_controls())
+        visual_layout.addStretch(1)
+
+        # Add control groups to Technical tab
+        technical_layout.addWidget(self._create_3d_controls())
+        technical_layout.addWidget(self._create_pulse_controls())
+        technical_layout.addWidget(self._create_audio_controls())
+        technical_layout.addStretch(1)
+
+        # Add tabs to tab widget
+        self.tab_widget.addTab(visual_tab, "Visual Controls")
+        self.tab_widget.addTab(technical_tab, "Technical Controls")
+
+        # Add tab widget to main layout
+        main_layout.addWidget(self.tab_widget)
 
         # Add reset button
         reset_btn = QPushButton("Reset to Defaults")
         reset_btn.clicked.connect(self.reset_to_defaults)
         main_layout.addWidget(reset_btn)
 
-        main_layout.addStretch(1)
         self.setLayout(main_layout)
 
     def _create_general_controls(self):
@@ -237,131 +258,6 @@ class ControlPanel(QWidget):
         layout.addWidget(self.pulse_decay_value, 3, 2)
         self.pulse_decay_slider.valueChanged.connect(
             lambda v: self.pulse_decay_value.setText(str(v/100)))
-
-        group.setLayout(layout)
-        return group
-
-    def _create_general_controls(self):
-        """Create general visualization controls"""
-        group = QGroupBox("General Controls")
-        layout = QGridLayout()
-
-        # Segments control
-        layout.addWidget(QLabel("Segments:"), 0, 0)
-        self.segments_slider = QSlider(Qt.Horizontal)
-        self.segments_slider.setRange(3, 24)
-        self.segments_slider.setValue(8)
-        layout.addWidget(self.segments_slider, 0, 1)
-        self.segments_value = QLabel("8")
-        layout.addWidget(self.segments_value, 0, 2)
-        self.segments_slider.valueChanged.connect(
-            lambda v: self.segments_value.setText(str(v)))
-
-        # Rotation speed
-        layout.addWidget(QLabel("Rotation:"), 1, 0)
-        self.rotation_slider = QSlider(Qt.Horizontal)
-        self.rotation_slider.setRange(0, 100)
-        self.rotation_slider.setValue(50)
-        layout.addWidget(self.rotation_slider, 1, 1)
-        self.rotation_value = QLabel("0.5")
-        layout.addWidget(self.rotation_value, 1, 2)
-        self.rotation_slider.valueChanged.connect(
-            lambda v: self.rotation_value.setText(str(v/100)))
-
-        # Symmetry mode
-        layout.addWidget(QLabel("Symmetry:"), 2, 0)
-        self.symmetry_combo = QComboBox()
-        self.symmetry_combo.addItems(["Radial", "Mirror", "Spiral"])
-        layout.addWidget(self.symmetry_combo, 2, 1, 1, 2)
-
-        group.setLayout(layout)
-        return group
-
-    def _create_visual_controls(self):
-        """Create visual effect controls"""
-        group = QGroupBox("Visual Effects")
-        layout = QGridLayout()
-
-        # Color mode
-        layout.addWidget(QLabel("Color Mode:"), 0, 0)
-        self.color_mode_combo = QComboBox()
-        self.color_mode_combo.addItems(["Spectrum", "Solid", "Gradient"])
-        layout.addWidget(self.color_mode_combo, 0, 1, 1, 2)
-
-        # Base color
-        layout.addWidget(QLabel("Base Color:"), 1, 0)
-        self.base_color_btn = QPushButton()
-        self.base_color_btn.setStyleSheet("background-color: #FF007F")
-        self.base_color_btn.clicked.connect(self._select_base_color)
-        layout.addWidget(self.base_color_btn, 1, 1, 1, 2)
-
-        # Secondary color
-        layout.addWidget(QLabel("Secondary:"), 2, 0)
-        self.secondary_color_btn = QPushButton()
-        self.secondary_color_btn.setStyleSheet("background-color: #007FFF")
-        self.secondary_color_btn.clicked.connect(self._select_secondary_color)
-        layout.addWidget(self.secondary_color_btn, 2, 1, 1, 2)
-
-        # Particle shape
-        layout.addWidget(QLabel("Shape:"), 3, 0)
-        self.shape_combo = QComboBox()
-        self.shape_combo.addItems(["Circle", "Square", "Triangle", "Star"])
-        layout.addWidget(self.shape_combo, 3, 1, 1, 2)
-
-        # Blur amount
-        layout.addWidget(QLabel("Blur:"), 4, 0)
-        self.blur_slider = QSlider(Qt.Horizontal)
-        self.blur_slider.setRange(0, 5)
-        self.blur_slider.setValue(0)
-        layout.addWidget(self.blur_slider, 4, 1)
-        self.blur_value = QLabel("0")
-        layout.addWidget(self.blur_value, 4, 2)
-        self.blur_slider.valueChanged.connect(
-            lambda v: self.blur_value.setText(str(v)))
-
-        # Distortion
-        layout.addWidget(QLabel("Distortion:"), 5, 0)
-        self.distortion_slider = QSlider(Qt.Horizontal)
-        self.distortion_slider.setRange(0, 100)
-        self.distortion_slider.setValue(0)
-        layout.addWidget(self.distortion_slider, 5, 1)
-        self.distortion_value = QLabel("0.0")
-        layout.addWidget(self.distortion_value, 5, 2)
-        self.distortion_slider.valueChanged.connect(
-            lambda v: self.distortion_value.setText(str(v/100)))
-
-        # Particle count
-        layout.addWidget(QLabel("Particles:"), 6, 0)
-        self.particles_slider = QSlider(Qt.Horizontal)
-        self.particles_slider.setRange(10, 300)
-        self.particles_slider.setValue(100)
-        layout.addWidget(self.particles_slider, 6, 1)
-        self.particles_value = QLabel("100")
-        layout.addWidget(self.particles_value, 6, 2)
-        self.particles_slider.valueChanged.connect(
-            lambda v: self.particles_value.setText(str(v)))
-
-        # Particle size
-        layout.addWidget(QLabel("Size:"), 7, 0)
-        self.size_slider = QSlider(Qt.Horizontal)
-        self.size_slider.setRange(1, 50)
-        self.size_slider.setValue(10)
-        layout.addWidget(self.size_slider, 7, 1)
-        self.size_value = QLabel("10")
-        layout.addWidget(self.size_value, 7, 2)
-        self.size_slider.valueChanged.connect(
-            lambda v: self.size_value.setText(str(v)))
-
-        # Trail length
-        layout.addWidget(QLabel("Trails:"), 8, 0)
-        self.trail_slider = QSlider(Qt.Horizontal)
-        self.trail_slider.setRange(1, 30)
-        self.trail_slider.setValue(5)
-        layout.addWidget(self.trail_slider, 8, 1)
-        self.trail_value = QLabel("5")
-        layout.addWidget(self.trail_value, 8, 2)
-        self.trail_slider.valueChanged.connect(
-            lambda v: self.trail_value.setText(str(v)))
 
         group.setLayout(layout)
         return group
