@@ -28,6 +28,11 @@ class ControlPanel(QWidget):
         technical_layout = QVBoxLayout()
         technical_tab.setLayout(technical_layout)
 
+        # New tab for additional visualizations
+        effects_tab = QWidget()
+        effects_layout = QVBoxLayout()
+        effects_tab.setLayout(effects_layout)
+
         # Add control groups to Visual tab
         visual_layout.addWidget(self._create_general_controls())
         visual_layout.addWidget(self._create_visual_controls())
@@ -40,9 +45,14 @@ class ControlPanel(QWidget):
         technical_layout.addWidget(self._create_audio_controls())
         technical_layout.addStretch(1)
 
+        # Add control groups to Effects tab
+        effects_layout.addWidget(self._create_wireframe_controls())
+        effects_layout.addStretch(1)
+
         # Add tabs to tab widget
         self.tab_widget.addTab(visual_tab, "Visual Controls")
         self.tab_widget.addTab(technical_tab, "Technical Controls")
+        self.tab_widget.addTab(effects_tab, "Effect Visualizations")
 
         # Add tab widget to main layout
         main_layout.addWidget(self.tab_widget)
@@ -425,6 +435,13 @@ class ControlPanel(QWidget):
         self.freq_display_check.setChecked(True)
         self.freq_height_slider.setValue(150)
 
+        # Reset wireframe controls
+        self.enable_wireframe_check.setChecked(True)
+        self.cube_size_slider.setValue(100)
+        self.cube_rotation_slider.setValue(100)
+        self.cube_color_combo.setCurrentIndex(0)
+        self.cube_color_btn.setStyleSheet("background-color: #FFFFFF")
+
     def apply_to_engine(self, engine, audio_processor):
         """Apply all settings to the engine and audio processor"""
         if not engine or not audio_processor:
@@ -474,3 +491,70 @@ class ControlPanel(QWidget):
             self.mids_slider.value() / 100,
             self.highs_slider.value() / 100
         )
+
+        # Apply wireframe settings
+        engine.set_wireframe_enabled(self.enable_wireframe_check.isChecked())
+        engine.set_wireframe_parameters(
+            self.cube_size_slider.value(),
+            self.cube_rotation_slider.value() / 100,
+            self.cube_color_combo.currentText().lower().replace(" ", "_")
+        )
+
+        cube_color = QColor()
+        cube_color.setNamedColor(self.cube_color_btn.styleSheet().split(":")[1].strip())
+        engine.set_wireframe_color(cube_color)
+
+    def _create_wireframe_controls(self):
+        """Create controls for wireframe effects"""
+        group = QGroupBox("Wireframe Effects")
+        layout = QGridLayout()
+
+        # Enable wireframe cube
+        layout.addWidget(QLabel("Show Cube:"), 0, 0)
+        self.enable_wireframe_check = QCheckBox()
+        self.enable_wireframe_check.setChecked(True)
+        layout.addWidget(self.enable_wireframe_check, 0, 1)
+
+        # Cube size
+        layout.addWidget(QLabel("Cube Size:"), 1, 0)
+        self.cube_size_slider = QSlider(Qt.Horizontal)
+        self.cube_size_slider.setRange(50, 300)
+        self.cube_size_slider.setValue(100)
+        layout.addWidget(self.cube_size_slider, 1, 1)
+        self.cube_size_value = QLabel("100")
+        layout.addWidget(self.cube_size_value, 1, 2)
+        self.cube_size_slider.valueChanged.connect(
+            lambda v: self.cube_size_value.setText(str(v)))
+
+        # Rotation speed
+        layout.addWidget(QLabel("Rotation Speed:"), 2, 0)
+        self.cube_rotation_slider = QSlider(Qt.Horizontal)
+        self.cube_rotation_slider.setRange(0, 200)
+        self.cube_rotation_slider.setValue(100)
+        layout.addWidget(self.cube_rotation_slider, 2, 1)
+        self.cube_rotation_value = QLabel("1.0")
+        layout.addWidget(self.cube_rotation_value, 2, 2)
+        self.cube_rotation_slider.valueChanged.connect(
+            lambda v: self.cube_rotation_value.setText(str(v/100)))
+
+        # Color mode
+        layout.addWidget(QLabel("Cube Color:"), 3, 0)
+        self.cube_color_combo = QComboBox()
+        self.cube_color_combo.addItems(["Audio Reactive", "Solid", "Rainbow"])
+        layout.addWidget(self.cube_color_combo, 3, 1, 1, 2)
+
+        # Base color
+        layout.addWidget(QLabel("Base Color:"), 4, 0)
+        self.cube_color_btn = QPushButton()
+        self.cube_color_btn.setStyleSheet("background-color: #FFFFFF")
+        self.cube_color_btn.clicked.connect(self._select_cube_color)
+        layout.addWidget(self.cube_color_btn, 4, 1, 1, 2)
+
+        group.setLayout(layout)
+        return group
+
+    def _select_cube_color(self):
+        """Open color dialog for cube color selection"""
+        color = QColorDialog.getColor(QColor(255, 255, 255), self, "Select Cube Color")
+        if color.isValid():
+            self.cube_color_btn.setStyleSheet(f"background-color: {color.name()}")

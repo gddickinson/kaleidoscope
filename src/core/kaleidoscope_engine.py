@@ -5,7 +5,7 @@ from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QThread, QTime, QRect, QPoint, 
 from PyQt5.QtGui import QColor, QPainter, QImage, QBrush, QPen
 
 from src.core.visualization_components import (
-    Particle, ShapeRenderer, ColorGenerator, SymmetryRenderer, EffectProcessor
+    Particle, ShapeRenderer, ColorGenerator, SymmetryRenderer, EffectProcessor, WireframeCube
 )
 
 
@@ -83,6 +83,13 @@ class KaleidoscopeEngine(QObject):
         self.final_image = QImage(width, height, QImage.Format_ARGB32)
         self.final_image.fill(Qt.black)
 
+        # Wireframe cube settings
+        self.enable_wireframe = True
+        self.wireframe_cube = WireframeCube(size=100)
+        self.cube_color_mode = "audio_reactive"  # "audio_reactive", "solid", "rainbow"
+        self.cube_rotation_speed = 1.0
+
+
         # Initialize particles
         self.init_particles()
 
@@ -138,6 +145,16 @@ class KaleidoscopeEngine(QObject):
                 p.x = math.cos(angle) * dist
                 p.y = math.sin(angle) * dist
                 p.trail = []
+
+        # Update wireframe cube
+        if self.enable_wireframe:
+            self.wireframe_cube.update(
+                self.bands[0] * self.bass_influence,
+                self.bands[1] * self.mids_influence,
+                self.bands[2] * self.highs_influence,
+                self.volume
+            )
+
 
     def detect_beat(self):
         """Simple beat detection based on bass energy"""
@@ -282,6 +299,19 @@ class KaleidoscopeEngine(QObject):
             }
         )
 
+
+        # Render wireframe cube after the kaleidoscope but before effects
+        if self.enable_wireframe:
+            self.wireframe_cube.render(
+                final_painter,
+                self.center_x,
+                self.center_y,
+                self.perspective
+            )
+
+        final_painter.end()
+
+
         final_painter.end()
 
         # Apply post-processing effects
@@ -401,3 +431,18 @@ class KaleidoscopeEngine(QObject):
         self.bass_influence = bass
         self.mids_influence = mids
         self.highs_influence = highs
+
+
+    def set_wireframe_enabled(self, enabled):
+        """Enable or disable wireframe cube"""
+        self.enable_wireframe = enabled
+
+    def set_wireframe_parameters(self, size, rotation_speed, color_mode):
+        """Set wireframe cube parameters"""
+        self.wireframe_cube.size = size
+        self.cube_rotation_speed = rotation_speed
+        self.cube_color_mode = color_mode
+
+    def set_wireframe_color(self, color):
+        """Set wireframe cube base color"""
+        self.wireframe_cube.base_color = color

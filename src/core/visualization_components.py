@@ -248,3 +248,108 @@ class EffectProcessor:
         return result
 
 
+class WireframeCube:
+    """3D Wireframe cube that reacts to audio"""
+    def __init__(self, size=100):
+        self.size = size
+        self.rotation_x = 0
+        self.rotation_y = 0
+        self.rotation_z = 0
+        self.position = [0, 0, 0]  # Center position
+        self.vertices = self._generate_vertices()
+        self.edges = self._generate_edges()
+        self.pulse_size = 1.0
+        self.base_color = QColor(255, 255, 255)
+        self.edge_thickness = 2
+
+    def _generate_vertices(self):
+        """Generate the 8 vertices of a cube"""
+        half = self.size / 2
+        return [
+            [-half, -half, -half],  # 0: back bottom left
+            [half, -half, -half],   # 1: back bottom right
+            [half, half, -half],    # 2: back top right
+            [-half, half, -half],   # 3: back top left
+            [-half, -half, half],   # 4: front bottom left
+            [half, -half, half],    # 5: front bottom right
+            [half, half, half],     # 6: front top right
+            [-half, half, half]     # 7: front top left
+        ]
+
+    def _generate_edges(self):
+        """Define the 12 edges connecting vertices"""
+        return [
+            (0, 1), (1, 2), (2, 3), (3, 0),  # Back face
+            (4, 5), (5, 6), (6, 7), (7, 4),  # Front face
+            (0, 4), (1, 5), (2, 6), (3, 7)   # Connecting edges
+        ]
+
+    def update(self, bass, mids, highs, volume):
+        """Update cube rotation and effects based on audio"""
+        # Rotate cube based on different frequency bands
+        self.rotation_x += bass * 0.01
+        self.rotation_y += mids * 0.008
+        self.rotation_z += highs * 0.005
+
+        # Pulse size with beat detection
+        self.pulse_size = 1.0 + volume * 0.5
+
+        # Change color based on frequencies
+        r = min(255, int(bass * 150 + 100))
+        g = min(255, int(mids * 150 + 100))
+        b = min(255, int(highs * 150 + 100))
+        self.base_color = QColor(r, g, b)
+
+        # Adjust edge thickness with volume
+        self.edge_thickness = 1 + int(volume * 3)
+
+    def render(self, painter, center_x, center_y, perspective=800):
+        """Render the wireframe cube with perspective projection"""
+        # Set up pen for drawing
+        pen = QPen(self.base_color)
+        pen.setWidth(self.edge_thickness)
+        painter.setPen(pen)
+
+        # Get current size accounting for audio-reactive pulse
+        current_size = self.size * self.pulse_size
+
+        # Transform and project vertices
+        projected_vertices = []
+        for vertex in self.vertices:
+            # Scale by current size
+            x, y, z = [v * self.pulse_size for v in vertex]
+
+            # Apply 3D rotations
+            x, y, z = self._rotate_point(x, y, z)
+
+            # Apply perspective projection
+            scale = perspective / (perspective + z)
+            px = center_x + x * scale
+            py = center_y + y * scale
+
+            projected_vertices.append((px, py))
+
+        # Draw edges
+        for edge in self.edges:
+            start = projected_vertices[edge[0]]
+            end = projected_vertices[edge[1]]
+            painter.drawLine(int(start[0]), int(start[1]), int(end[0]), int(end[1]))
+
+    def _rotate_point(self, x, y, z):
+        """Apply 3D rotation to a point"""
+        # Rotate around X axis
+        y_rot = y * math.cos(self.rotation_x) - z * math.sin(self.rotation_x)
+        z_rot = y * math.sin(self.rotation_x) + z * math.cos(self.rotation_x)
+        y, z = y_rot, z_rot
+
+        # Rotate around Y axis
+        x_rot = x * math.cos(self.rotation_y) + z * math.sin(self.rotation_y)
+        z_rot = -x * math.sin(self.rotation_y) + z * math.cos(self.rotation_y)
+        x, z = x_rot, z_rot
+
+        # Rotate around Z axis
+        x_rot = x * math.cos(self.rotation_z) - y * math.sin(self.rotation_z)
+        y_rot = x * math.sin(self.rotation_z) + y * math.cos(self.rotation_z)
+        x, y = x_rot, y_rot
+
+        return x, y, z
