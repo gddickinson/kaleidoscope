@@ -27,6 +27,9 @@ class AudioProcessor(QThread):
         self.rms_volume = 0
         self.prev_volume = 0
 
+        # Store the last raw audio chunk for waveform visualization
+        self.last_raw_audio = np.zeros(self.chunk_size)
+
     def run(self):
         p = pyaudio.PyAudio()
         stream = p.open(format=self.format,
@@ -39,6 +42,11 @@ class AudioProcessor(QThread):
             try:
                 # Read audio data
                 data = np.frombuffer(stream.read(self.chunk_size, exception_on_overflow=False), dtype=np.int16)
+
+                # Store normalized raw audio for waveform visualization
+                if len(data) > 0:
+                    self.last_raw_audio = data / 32768.0  # Normalize to [-1, 1] range
+
 
                 # Calculate volume/amplitude (RMS)
                 # Avoid NaN by ensuring there's valid data
@@ -78,6 +86,10 @@ class AudioProcessor(QThread):
                     volume = 0.0 if np.isnan(self.rms_volume) else self.rms_volume
 
                     self.audio_data.emit(spectrum, bands, volume)
+
+                    # Emit signal with raw audio data added
+                    self.audio_data.emit(spectrum, bands, volume, self.last_raw_audio)
+
             except Exception as e:
                 print(f"Audio processing error: {e}")
                 import traceback

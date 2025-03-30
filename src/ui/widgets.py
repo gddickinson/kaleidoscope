@@ -50,10 +50,10 @@ class VisualizationWidget(QWidget):
         if self.engine:
             self.update()
 
-    def process_audio(self, spectrum, bands, volume):
+    def process_audio(self, spectrum, bands, volume, raw_audio=None):
         """Process audio data and update visualization"""
         if self.engine:
-            self.engine.update(spectrum, bands, volume)
+            self.engine.update(spectrum, bands, volume, raw_audio)
 
     def paintEvent(self, event):
         """Paint the current frame"""

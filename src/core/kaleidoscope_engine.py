@@ -5,7 +5,8 @@ from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QThread, QTime, QRect, QPoint, 
 from PyQt5.QtGui import QColor, QPainter, QImage, QBrush, QPen
 
 from src.core.visualization_components import (
-    Particle, ShapeRenderer, ColorGenerator, SymmetryRenderer, EffectProcessor, WireframeCube
+    Particle, ShapeRenderer, ColorGenerator, SymmetryRenderer, EffectProcessor, WireframeCube,
+    CircularWaveform
 )
 
 
@@ -89,6 +90,12 @@ class KaleidoscopeEngine(QObject):
         self.cube_color_mode = "audio_reactive"  # "audio_reactive", "solid", "rainbow"
         self.cube_rotation_speed = 1.0
 
+        # Circular waveform
+        self.enable_waveform = True
+        self.circular_waveform = CircularWaveform(radius=min(width, height) // 2)
+
+        # Store raw audio data for waveform
+        self.raw_audio_data = np.zeros(1024)
 
         # Initialize particles
         self.init_particles()
@@ -99,8 +106,12 @@ class KaleidoscopeEngine(QObject):
         for _ in range(self.max_particles):
             self.particles.append(Particle(self.radius, self.particle_size, self.trail_length))
 
-    def update(self, spectrum, bands, volume):
+    def update(self, spectrum, bands, volume, raw_audio=None):
         """Update visualization parameters based on audio data"""
+
+        if raw_audio is not None and len(raw_audio) > 0:
+            self.raw_audio_data = raw_audio
+
         self.spectrum_data = spectrum
         self.bands = bands
         self.volume = volume
@@ -156,6 +167,14 @@ class KaleidoscopeEngine(QObject):
                 self.cube_rotation_speed  # Pass the rotation speed
             )
 
+        # Update circular waveform
+        if self.enable_waveform:
+            self.circular_waveform.update(
+                self.raw_audio_data,
+                self.spectrum_data,
+                self.volume,
+                self.bands[0] * self.bass_influence
+            )
 
     def detect_beat(self):
         """Simple beat detection based on bass energy"""
@@ -299,6 +318,16 @@ class KaleidoscopeEngine(QObject):
                 'center_y': self.center_y
             }
         )
+
+
+        # Render circular waveform if enabled
+        if self.enable_waveform:
+            self.circular_waveform.render(
+                final_painter,
+                self.center_x,
+                self.center_y
+            )
+
 
         # Render wireframe cube after the kaleidoscope effect but before ending painter
         if self.enable_wireframe:
@@ -452,3 +481,28 @@ class KaleidoscopeEngine(QObject):
     def set_wireframe_color(self, color):
         """Set wireframe cube base color"""
         self.wireframe_cube.base_color = color
+
+    def set_waveform_enabled(self, enabled):
+        """Enable or disable circular waveform"""
+        self.enable_waveform = enabled
+
+    def set_waveform_parameters(self, inner_radius_pct, line_width, rotation_speed, amplitude):
+        """Set circular waveform parameters"""
+        # Update radius when window size changes
+        radius = min(self.width, self.height) // 2
+
+        self.circular_waveform.set_radius(radius, inner_radius_pct / 100.0)
+        self.circular_waveform.set_line_width(line_width)
+        self.circular_waveform.set_rotation_speed(rotation_speed)
+        self.circular_waveform.amplitude = amplitude
+
+    def set_waveform_colors(self, primary_color, secondary_color, use_gradient):
+        """Set circular waveform colors"""
+        if use_gradient:
+            self.circular_waveform.set_colors(primary_color, secondary_color)
+        else:
+            self.circular_waveform.set_colors(primary_color)
+
+    def set_waveform_reflection(self, show_reflection, reflection_alpha):
+        """Set circular waveform reflection settings"""
+        self.circular_waveform.set_reflection(show_reflection, reflection_alpha / 100.0)

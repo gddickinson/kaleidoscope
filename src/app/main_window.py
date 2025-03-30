@@ -139,10 +139,10 @@ class MainWindow(QMainWindow):
         else:
             self.debug_console.log("Exited fullscreen mode")
 
-    def process_audio(self, spectrum, bands, volume):
+    def process_audio(self, spectrum, bands, volume, raw_audio=None):
         """Process audio data from audio processor"""
-        # Update visualizations
-        self.visualization.process_audio(spectrum, bands, volume)
+        # Update visualizations with raw audio data
+        self.visualization.process_audio(spectrum, bands, volume, raw_audio)
         self.freq_display.update_data(spectrum, bands, volume)
 
     def closeEvent(self, event):

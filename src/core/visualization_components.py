@@ -8,6 +8,7 @@ import random
 import colorsys
 from PyQt5.QtCore import Qt, QPoint, QRect
 from PyQt5.QtGui import QColor, QPainter, QBrush, QPen, QImage, QRadialGradient
+import numpy as np
 
 
 
@@ -353,3 +354,141 @@ class WireframeCube:
         x, y = x_rot, y_rot
 
         return x, y, z
+
+class CircularWaveform:
+    """Circular waveform display that surrounds the kaleidoscope"""
+    def __init__(self, radius=300, inner_radius_pct=0.8, num_samples=128):
+        self.radius = radius  # Outer radius
+        self.inner_radius_pct = inner_radius_pct  # Inner radius as percentage of outer
+        self.inner_radius = radius * inner_radius_pct
+        self.num_samples = num_samples  # Number of sample points to use
+        self.waveform_data = np.zeros(num_samples)  # Current waveform data
+        self.smoothed_data = np.zeros(num_samples)  # Smoothed data for display
+        self.smoothing = 0.3  # Smoothing factor
+        self.line_width = 2  # Line width
+        self.color = QColor(255, 255, 255, 180)  # Default color with alpha
+        self.secondary_color = QColor(0, 200, 255, 180)  # For gradient effect
+        self.rotate_speed = 0.01  # Rotation speed
+        self.rotation = 0  # Current rotation
+        self.use_gradient = True  # Whether to use gradient coloring
+        self.amplitude = 1.0  # Amplitude multiplier
+        self.bass_influence = 0.5  # How much bass affects the waveform
+        self.show_reflection = True  # Show reflection/mirror
+        self.reflection_alpha = 0.3  # Reflection opacity
+
+    def update(self, raw_audio_data, spectrum, volume, bass_value):
+        """Update the waveform with new audio data"""
+        # Resample raw audio to number of points we want to display
+        # (We'll use spectrum data as a simpler alternative to resampling raw audio)
+        if len(spectrum) > self.num_samples:
+            # Downsample
+            step = len(spectrum) / self.num_samples
+            self.waveform_data = np.array([spectrum[int(i * step)] for i in range(self.num_samples)])
+        else:
+            # Upsample or use as is
+            self.waveform_data = np.interp(
+                np.linspace(0, len(spectrum), self.num_samples),
+                np.arange(len(spectrum)),
+                spectrum
+            )
+
+        # Apply smoothing
+        self.smoothed_data = self.smoothed_data * self.smoothing + self.waveform_data * (1 - self.smoothing)
+
+        # Scale based on overall volume and bass
+        self.amplitude = 0.5 + (volume * 1.5) + (bass_value * self.bass_influence)
+
+        # Update rotation
+        self.rotation += self.rotate_speed
+        if self.rotation > 2 * math.pi:
+            self.rotation -= 2 * math.pi
+
+    def render(self, painter, center_x, center_y):
+        """Render the circular waveform"""
+        painter.setRenderHint(QPainter.Antialiasing, True)
+
+        # Calculate the actual inner radius to use
+        inner_radius = self.inner_radius
+
+        # Draw the waveform
+        for i in range(self.num_samples):
+            # Calculate angle for this sample
+            angle = (i / self.num_samples * 2 * math.pi) + self.rotation
+
+            # Get normalized value and apply amplitude
+            value = self.smoothed_data[i] * self.amplitude
+
+            # Clamp value to reasonable range
+            value = max(0, min(1, value))
+
+            # Calculate start and end points
+            start_x = center_x + math.cos(angle) * inner_radius
+            start_y = center_y + math.sin(angle) * inner_radius
+
+            end_x = center_x + math.cos(angle) * (inner_radius + (value * (self.radius - inner_radius)))
+            end_y = center_y + math.sin(angle) * (inner_radius + (value * (self.radius - inner_radius)))
+
+            # Set color with gradient based on position or value
+            if self.use_gradient:
+                # Use gradient based on amplitude/value
+                ratio = value
+                r = int(self.color.red() * (1 - ratio) + self.secondary_color.red() * ratio)
+                g = int(self.color.green() * (1 - ratio) + self.secondary_color.green() * ratio)
+                b = int(self.color.blue() * (1 - ratio) + self.secondary_color.blue() * ratio)
+                a = int(self.color.alpha() * (1 - ratio) + self.secondary_color.alpha() * ratio)
+
+                line_color = QColor(r, g, b, a)
+            else:
+                line_color = self.color
+
+            # Draw line
+            pen = QPen(line_color)
+            pen.setWidth(self.line_width)
+            painter.setPen(pen)
+            painter.drawLine(int(start_x), int(start_y), int(end_x), int(end_y))
+
+            # Draw reflection if enabled
+            if self.show_reflection:
+                reflection_color = QColor(line_color)
+                reflection_color.setAlpha(int(line_color.alpha() * self.reflection_alpha))
+                reflection_pen = QPen(reflection_color)
+                reflection_pen.setWidth(self.line_width)
+                painter.setPen(reflection_pen)
+
+                # Reflect point across the center
+                reflected_start_x = center_x - (start_x - center_x)
+                reflected_start_y = center_y - (start_y - center_y)
+                reflected_end_x = center_x - (end_x - center_x)
+                reflected_end_y = center_y - (end_y - center_y)
+
+                painter.drawLine(int(reflected_start_x), int(reflected_start_y),
+                                int(reflected_end_x), int(reflected_end_y))
+
+    def set_radius(self, radius, inner_radius_pct=None):
+        """Set the radius of the circular waveform"""
+        self.radius = radius
+        if inner_radius_pct is not None:
+            self.inner_radius_pct = inner_radius_pct
+        self.inner_radius = self.radius * self.inner_radius_pct
+
+    def set_colors(self, primary_color, secondary_color=None):
+        """Set the colors for the waveform"""
+        self.color = primary_color
+        if secondary_color:
+            self.secondary_color = secondary_color
+            self.use_gradient = True
+        else:
+            self.use_gradient = False
+
+    def set_line_width(self, width):
+        """Set the line width"""
+        self.line_width = width
+
+    def set_rotation_speed(self, speed):
+        """Set the rotation speed"""
+        self.rotate_speed = speed
+
+    def set_reflection(self, show, alpha=0.3):
+        """Enable/disable reflection and set opacity"""
+        self.show_reflection = show
+        self.reflection_alpha = alpha
