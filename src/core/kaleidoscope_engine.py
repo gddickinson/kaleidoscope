@@ -544,3 +544,10 @@ class KaleidoscopeEngine(QObject):
     def set_waveform_reflection(self, show_reflection, reflection_alpha):
         """Set circular waveform reflection settings"""
         self.circular_waveform.set_reflection(show_reflection, reflection_alpha / 100.0)
+
+    def set_wireframe_edges_visible(self, visible):
+        """Enable or disable wireframe edges"""
+        try:
+            self.wireframe_manager.set_edges_visible(visible)
+        except Exception as e:
+            print(f"Error setting wireframe edges visibility: {e}")

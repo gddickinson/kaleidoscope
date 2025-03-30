@@ -407,6 +407,7 @@ class WireframeShape:
         self.morph_target = None
         self.morph_progress = 0.0
         self.edge_opacity = 255  # Alpha value for edges
+        self.show_edges = True  # New flag to toggle edge visibility
 
         # Audio-reactive parameters
         self.rotation_speed_x = 0.01
@@ -486,21 +487,23 @@ class WireframeShape:
                 else:
                     projected_vertices.append(main_vertices[i])
 
-            # Draw edges
-            for edge in self.edges:
-                if edge[0] < len(projected_vertices) and edge[1] < len(projected_vertices):
-                    start = projected_vertices[edge[0]]
-                    end = projected_vertices[edge[1]]
-                    painter.drawLine(int(start[0]), int(start[1]), int(end[0]), int(end[1]))
+            # Draw edges if enabled
+            if self.show_edges:
+                for edge in self.edges:
+                    if edge[0] < len(projected_vertices) and edge[1] < len(projected_vertices):
+                        start = projected_vertices[edge[0]]
+                        end = projected_vertices[edge[1]]
+                        painter.drawLine(int(start[0]), int(start[1]), int(end[0]), int(end[1]))
         else:
             # Transform and project vertices
             projected_vertices = self._transform_vertices(self.vertices, current_size, center_x, center_y, perspective)
 
-            # Draw edges
-            for edge in self.edges:
-                start = projected_vertices[edge[0]]
-                end = projected_vertices[edge[1]]
-                painter.drawLine(int(start[0]), int(start[1]), int(end[0]), int(end[1]))
+            # Draw edges if enabled
+            if self.show_edges:
+                for edge in self.edges:
+                    start = projected_vertices[edge[0]]
+                    end = projected_vertices[edge[1]]
+                    painter.drawLine(int(start[0]), int(start[1]), int(end[0]), int(end[1]))
 
     def _transform_vertices(self, vertices, current_size, center_x, center_y, perspective=800):
         """Transform and project vertices with 3D rotation and perspective"""
@@ -850,6 +853,7 @@ class WireframeManager:
         self.echo_count = 3
         self.echo_opacity = 0.3
         self.echo_spacing = 0.2  # Spacing between echo shapes
+        self.show_edges = True  # Add this flag for edge visibility
 
         # Color effects
         self.color_mode = "audio_reactive"  # "audio_reactive", "solid", "rainbow", "gradient"
@@ -965,6 +969,9 @@ class WireframeManager:
 
         # Render all active shapes
         for shape in self.shapes:
+            # Apply the edge visibility setting to the shape
+            shape.show_edges = self.show_edges
+
             # Render glow effect if enabled
             if self.edge_glow:
                 self._render_glow_effect(painter, shape, center_x, center_y, perspective)
@@ -1155,3 +1162,12 @@ class WireframeManager:
         self.auto_morph = auto_morph
         self.morph_on_beat = morph_on_beat
         self.beat_interval = beat_interval
+
+
+    def set_edges_visible(self, visible):
+        """Set whether edges are visible"""
+        self.show_edges = visible
+
+        # Update all existing shapes
+        for shape in self.shapes:
+            shape.show_edges = visible

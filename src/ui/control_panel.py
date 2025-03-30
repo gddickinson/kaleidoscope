@@ -450,6 +450,11 @@ class ControlPanel(QWidget):
         # Reset wireframe basic controls
         if hasattr(self, 'enable_wireframe_check'):
             self.enable_wireframe_check.setChecked(True)
+
+            # Reset edge visibility (new)
+            if hasattr(self, 'wireframe_edges_check'):
+                self.wireframe_edges_check.setChecked(True)
+
             self.wireframe_shape_combo.setCurrentIndex(0)  # Cube
             self.wireframe_morph_check.setChecked(True)
             self.wireframe_size_slider.setValue(100)
@@ -542,6 +547,10 @@ class ControlPanel(QWidget):
             if hasattr(self, 'enable_wireframe_check'):
                 # Enable/disable wireframe
                 engine.set_wireframe_enabled(self.enable_wireframe_check.isChecked())
+
+                # Set edge visibility (new setting)
+                if hasattr(self, 'wireframe_edges_check'):
+                    engine.set_wireframe_edges_visible(self.wireframe_edges_check.isChecked())
 
                 # Get shape type from combo box, ensuring lowercase
                 shape_type = self.wireframe_shape_combo.currentText().lower()
@@ -640,6 +649,7 @@ class ControlPanel(QWidget):
             print(f"Error applying waveform settings: {e}")
 
 
+
     def _create_wireframe_controls(self):
         """Create controls for enhanced wireframe effects"""
         group = QGroupBox("Wireframe Shapes")
@@ -651,40 +661,46 @@ class ControlPanel(QWidget):
         self.enable_wireframe_check.setChecked(True)
         layout.addWidget(self.enable_wireframe_check, 0, 1)
 
+        # Show edges (new control)
+        layout.addWidget(QLabel("Show Edges:"), 1, 0)
+        self.wireframe_edges_check = QCheckBox()
+        self.wireframe_edges_check.setChecked(True)
+        layout.addWidget(self.wireframe_edges_check, 1, 1)
+
         # Shape type
-        layout.addWidget(QLabel("Shape:"), 1, 0)
+        layout.addWidget(QLabel("Shape:"), 2, 0)
         self.wireframe_shape_combo = QComboBox()
         self.wireframe_shape_combo.addItems([
             "Cube", "Pyramid", "Sphere", "Octahedron",
             "Dodecahedron", "Tetrahedron", "Torus"
         ])
-        layout.addWidget(self.wireframe_shape_combo, 1, 1, 1, 2)
+        layout.addWidget(self.wireframe_shape_combo, 2, 1, 1, 2)
 
         # Morph on change
-        layout.addWidget(QLabel("Morph on Change:"), 2, 0)
+        layout.addWidget(QLabel("Morph on Change:"), 3, 0)
         self.wireframe_morph_check = QCheckBox()
         self.wireframe_morph_check.setChecked(True)
-        layout.addWidget(self.wireframe_morph_check, 2, 1)
+        layout.addWidget(self.wireframe_morph_check, 3, 1)
 
         # Shape size
-        layout.addWidget(QLabel("Size:"), 3, 0)
+        layout.addWidget(QLabel("Size:"), 4, 0)
         self.wireframe_size_slider = QSlider(Qt.Horizontal)
         self.wireframe_size_slider.setRange(50, 300)
         self.wireframe_size_slider.setValue(100)
-        layout.addWidget(self.wireframe_size_slider, 3, 1)
+        layout.addWidget(self.wireframe_size_slider, 4, 1)
         self.wireframe_size_value = QLabel("100")
-        layout.addWidget(self.wireframe_size_value, 3, 2)
+        layout.addWidget(self.wireframe_size_value, 4, 2)
         self.wireframe_size_slider.valueChanged.connect(
             lambda v: self.wireframe_size_value.setText(str(v)))
 
         # Rotation speed
-        layout.addWidget(QLabel("Rotation Speed:"), 4, 0)
+        layout.addWidget(QLabel("Rotation Speed:"), 5, 0)
         self.wireframe_rotation_slider = QSlider(Qt.Horizontal)
         self.wireframe_rotation_slider.setRange(0, 200)
         self.wireframe_rotation_slider.setValue(100)
-        layout.addWidget(self.wireframe_rotation_slider, 4, 1)
+        layout.addWidget(self.wireframe_rotation_slider, 5, 1)
         self.wireframe_rotation_value = QLabel("1.0")
-        layout.addWidget(self.wireframe_rotation_value, 4, 2)
+        layout.addWidget(self.wireframe_rotation_value, 5, 2)
         self.wireframe_rotation_slider.valueChanged.connect(
             lambda v: self.wireframe_rotation_value.setText(f"{v/100:.1f}"))
 
