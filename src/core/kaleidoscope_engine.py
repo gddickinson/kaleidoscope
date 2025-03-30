@@ -6,7 +6,7 @@ from PyQt5.QtGui import QColor, QPainter, QImage, QBrush, QPen
 
 from src.core.visualization_components import (
     Particle, ShapeRenderer, ColorGenerator, SymmetryRenderer, EffectProcessor, WireframeCube,
-    CircularWaveform
+    CircularWaveform, WireframeManager
 )
 
 
@@ -86,7 +86,7 @@ class KaleidoscopeEngine(QObject):
 
         # Wireframe cube settings
         self.enable_wireframe = True
-        self.wireframe_cube = WireframeCube(size=100)
+        self.wireframe_manager = WireframeManager(size=min(width, height) // 4)
         self.cube_color_mode = "audio_reactive"  # "audio_reactive", "solid", "rainbow"
         self.cube_rotation_speed = 1.0
 
@@ -157,14 +157,17 @@ class KaleidoscopeEngine(QObject):
                 p.y = math.sin(angle) * dist
                 p.trail = []
 
-        # Update wireframe cube
+        # Detect beat for wireframe effects
+        beat_detected = self.is_beat  # Use the beat detection from kaleidoscope engine
+
+        # Update wireframe visualization with beat information
         if self.enable_wireframe:
-            self.wireframe_cube.update(
+            self.wireframe_manager.update(
                 self.bands[0] * self.bass_influence,
                 self.bands[1] * self.mids_influence,
                 self.bands[2] * self.highs_influence,
                 self.volume,
-                self.cube_rotation_speed  # Pass the rotation speed
+                beat_detected
             )
 
         # Update circular waveform
@@ -329,14 +332,16 @@ class KaleidoscopeEngine(QObject):
             )
 
 
-        # Render wireframe cube after the kaleidoscope effect but before ending painter
+        # Render wireframe shapes if enabled
         if self.enable_wireframe:
-            self.wireframe_cube.render(
+            self.wireframe_manager.render(
                 final_painter,
-                self.center_x,
-                self.center_y,
+                self.center_x,  # Make sure center_x is properly defined
+                self.center_y,  # Make sure center_y is properly defined
                 self.perspective
             )
+
+        final_painter.end()
 
         # End painter after all rendering is done
         final_painter.end()
@@ -391,6 +396,11 @@ class KaleidoscopeEngine(QObject):
         self.buffer_image.fill(Qt.transparent)
         self.final_image = QImage(width, height, QImage.Format_ARGB32)
         self.final_image.fill(Qt.black)
+
+        # Update wireframe manager if it exists
+        if hasattr(self, 'wireframe_manager'):
+            # Update size based on new dimensions
+            self.wireframe_manager.set_size(min(width, height) // 4)
 
     # 3D settings
     def set_3d_enabled(self, enabled):
@@ -461,26 +471,44 @@ class KaleidoscopeEngine(QObject):
 
 
     def set_wireframe_enabled(self, enabled):
-        """Enable or disable wireframe cube"""
+        """Enable or disable wireframe visualization"""
         self.enable_wireframe = enabled
 
-    def set_wireframe_parameters(self, size, rotation_speed, color_mode):
-        """Set wireframe cube parameters"""
-        # Update the wireframe cube size
-        self.wireframe_cube = WireframeCube(size=size)
+    def set_wireframe_shape(self, shape_type, morph=False):
+        """Set the wireframe shape type"""
+        self.wireframe_manager.set_shape(shape_type, morph)
 
-        # Update rotation speed multiplier
-        self.cube_rotation_speed = rotation_speed
+    def set_wireframe_size(self, size):
+        """Set the wireframe shape size"""
+        self.wireframe_manager.set_size(size)
 
-        # Set color mode
-        self.cube_color_mode = color_mode
+    def set_wireframe_rotation(self, speed):
+        """Set wireframe rotation speed"""
+        self.wireframe_manager.set_rotation_speed(speed)
 
-        # Debug print to verify settings are applied
-        print(f"Wireframe settings applied: size={size}, speed={rotation_speed}, mode={color_mode}")
+    def set_wireframe_color_mode(self, mode):
+        """Set wireframe color mode"""
+        self.wireframe_manager.set_color_mode(mode)
 
-    def set_wireframe_color(self, color):
-        """Set wireframe cube base color"""
-        self.wireframe_cube.base_color = color
+    def set_wireframe_colors(self, primary_color, secondary_color=None):
+        """Set wireframe custom colors"""
+        self.wireframe_manager.set_custom_colors(primary_color, secondary_color)
+
+    def set_wireframe_effects(self, show_vertices, vertex_size, edge_glow, glow_intensity):
+        """Set wireframe visual effects"""
+        self.wireframe_manager.set_effects(show_vertices, vertex_size, edge_glow, glow_intensity)
+
+    def set_wireframe_echo(self, enabled, count=3, opacity=0.3, spacing=0.2):
+        """Set wireframe echo/trail effect"""
+        self.wireframe_manager.set_echo_effect(enabled, count, opacity, spacing)
+
+    def set_wireframe_beat_response(self, auto_morph, morph_on_beat, beat_interval=30):
+        """Set wireframe beat response options"""
+        self.wireframe_manager.set_beat_response(auto_morph, morph_on_beat, beat_interval)
+
+    def set_wireframe_multi_shape(self, enabled, count=3):
+        """Enable/disable multiple shapes mode"""
+        self.wireframe_manager.set_multi_shape_mode(enabled, count)
 
     def set_waveform_enabled(self, enabled):
         """Enable or disable circular waveform"""

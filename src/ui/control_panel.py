@@ -28,10 +28,15 @@ class ControlPanel(QWidget):
         technical_layout = QVBoxLayout()
         technical_tab.setLayout(technical_layout)
 
-        # Tab for additional visualizations
-        effects_tab = QWidget()
-        effects_layout = QVBoxLayout()
-        effects_tab.setLayout(effects_layout)
+        # Tab for visualizations
+        vis_tab = QWidget()
+        vis_layout = QVBoxLayout()
+        vis_tab.setLayout(vis_layout)
+
+        # New tab just for wireframe settings
+        wireframe_tab = QWidget()
+        wireframe_layout = QVBoxLayout()
+        wireframe_tab.setLayout(wireframe_layout)
 
         # Add control groups to Visual tab
         visual_layout.addWidget(self._create_general_controls())
@@ -45,15 +50,21 @@ class ControlPanel(QWidget):
         technical_layout.addWidget(self._create_audio_controls())
         technical_layout.addStretch(1)
 
-        # Add control groups to Effects tab
-        effects_layout.addWidget(self._create_wireframe_controls())
-        effects_layout.addWidget(self._create_waveform_controls())  # Add circular waveform controls
-        effects_layout.addStretch(1)
+        # Add control groups to Visualizations tab
+        vis_layout.addWidget(self._create_waveform_controls())
+        vis_layout.addStretch(1)
+
+        # Add control groups to Wireframe tab
+        wireframe_layout.addWidget(self._create_wireframe_controls())
+        wireframe_layout.addWidget(self._create_wireframe_visual_controls())
+        wireframe_layout.addWidget(self._create_wireframe_advanced_controls())
+        wireframe_layout.addStretch(1)
 
         # Add tabs to tab widget
         self.tab_widget.addTab(visual_tab, "Visual Controls")
         self.tab_widget.addTab(technical_tab, "Technical Controls")
-        self.tab_widget.addTab(effects_tab, "Effect Visualizations")
+        self.tab_widget.addTab(vis_tab, "Visualizations")
+        self.tab_widget.addTab(wireframe_tab, "Wireframe Shapes")
 
         # Add tab widget to main layout
         main_layout.addWidget(self.tab_widget)
@@ -436,13 +447,30 @@ class ControlPanel(QWidget):
         self.freq_display_check.setChecked(True)
         self.freq_height_slider.setValue(150)
 
-        # Reset wireframe controls
+        # Reset wireframe basic controls
         if hasattr(self, 'enable_wireframe_check'):
             self.enable_wireframe_check.setChecked(True)
-            self.cube_size_slider.setValue(100)
-            self.cube_rotation_slider.setValue(100)
-            self.cube_color_combo.setCurrentIndex(0)
-            self.cube_color_btn.setStyleSheet("background-color: #FFFFFF")
+            self.wireframe_shape_combo.setCurrentIndex(0)  # Cube
+            self.wireframe_morph_check.setChecked(True)
+            self.wireframe_size_slider.setValue(100)
+            self.wireframe_rotation_slider.setValue(100)
+            self.wireframe_color_combo.setCurrentIndex(0)  # Audio Reactive
+            self.wireframe_color_btn.setStyleSheet("background-color: #FFFFFF")
+            self.wireframe_secondary_color_btn.setStyleSheet("background-color: #00C8FF")
+            self.wireframe_vertices_check.setChecked(False)
+            self.wireframe_vertex_slider.setValue(3)
+            self.wireframe_glow_check.setChecked(False)
+            self.wireframe_glow_slider.setValue(50)
+
+        # Reset wireframe advanced controls
+        if hasattr(self, 'wireframe_multi_check'):
+            self.wireframe_multi_check.setChecked(False)
+            self.wireframe_count_slider.setValue(3)
+            self.wireframe_echo_check.setChecked(False)
+            self.wireframe_echo_count_slider.setValue(3)
+            self.wireframe_echo_opacity_slider.setValue(30)
+            self.wireframe_auto_morph_check.setChecked(False)
+            self.wireframe_beat_morph_check.setChecked(False)
 
         # Reset circular waveform controls
         if hasattr(self, 'enable_waveform_check'):
@@ -507,30 +535,66 @@ class ControlPanel(QWidget):
             self.highs_slider.value() / 100
         )
 
-        # Apply wireframe settings with debugging
+
+        # Apply wireframe settings
         try:
-            # Check if wireframe controls exist
+            # Basic wireframe settings
             if hasattr(self, 'enable_wireframe_check'):
-                wireframe_enabled = self.enable_wireframe_check.isChecked()
-                cube_size = self.cube_size_slider.value()
-                rotation_speed = self.cube_rotation_slider.value() / 100
+                # Enable/disable wireframe
+                engine.set_wireframe_enabled(self.enable_wireframe_check.isChecked())
 
-                # Get color mode with proper conversion
-                color_mode = self.cube_color_combo.currentText().lower().replace(" ", "_")
+                # Set wireframe shape with morphing option
+                shape_type = self.wireframe_shape_combo.currentText().lower()
+                morph_enabled = self.wireframe_morph_check.isChecked()
+                engine.set_wireframe_shape(shape_type, morph_enabled)
 
-                print(f"Setting wireframe: enabled={wireframe_enabled}, size={cube_size}, speed={rotation_speed}, mode={color_mode}")
+                # Set size and rotation
+                size = self.wireframe_size_slider.value()
+                rotation_speed = self.wireframe_rotation_slider.value() / 100.0
+                engine.set_wireframe_size(size)
+                engine.set_wireframe_rotation(rotation_speed)
 
-                # Set wireframe enabled state
-                engine.set_wireframe_enabled(wireframe_enabled)
+                # Set color mode
+                color_mode = self.wireframe_color_combo.currentText().lower().replace(" ", "_")
+                engine.set_wireframe_color_mode(color_mode)
 
-                # Set wireframe parameters
-                engine.set_wireframe_parameters(cube_size, rotation_speed, color_mode)
+                # Set custom colors
+                primary_color = QColor()
+                primary_color.setNamedColor(self.wireframe_color_btn.styleSheet().split(":")[1].strip())
 
-                # Set cube color if in solid mode
-                if color_mode == "solid":
-                    cube_color = QColor()
-                    cube_color.setNamedColor(self.cube_color_btn.styleSheet().split(":")[1].strip())
-                    engine.set_wireframe_color(cube_color)
+                secondary_color = QColor()
+                secondary_color.setNamedColor(self.wireframe_secondary_color_btn.styleSheet().split(":")[1].strip())
+
+                engine.set_wireframe_colors(primary_color, secondary_color)
+
+                # Set visual effects
+                show_vertices = self.wireframe_vertices_check.isChecked()
+                vertex_size = self.wireframe_vertex_slider.value()
+                edge_glow = self.wireframe_glow_check.isChecked()
+                glow_intensity = self.wireframe_glow_slider.value() / 100.0
+
+                engine.set_wireframe_effects(show_vertices, vertex_size, edge_glow, glow_intensity)
+
+                # Set advanced settings
+                if hasattr(self, 'wireframe_multi_check'):
+                    # Multi-shape mode
+                    multi_enabled = self.wireframe_multi_check.isChecked()
+                    shape_count = self.wireframe_count_slider.value()
+                    engine.set_wireframe_multi_shape(multi_enabled, shape_count)
+
+                    # Echo effect
+                    echo_enabled = self.wireframe_echo_check.isChecked()
+                    echo_count = self.wireframe_echo_count_slider.value()
+                    echo_opacity = self.wireframe_echo_opacity_slider.value() / 100.0
+                    echo_spacing = 0.2  # Fixed for now
+
+                    engine.set_wireframe_echo(echo_enabled, echo_count, echo_opacity, echo_spacing)
+
+                    # Beat response
+                    auto_morph = self.wireframe_auto_morph_check.isChecked()
+                    beat_morph = self.wireframe_beat_morph_check.isChecked()
+
+                    engine.set_wireframe_beat_response(auto_morph, beat_morph)
         except Exception as e:
             print(f"Error applying wireframe settings: {e}")
 
@@ -570,53 +634,198 @@ class ControlPanel(QWidget):
 
 
     def _create_wireframe_controls(self):
-        """Create controls for wireframe effects"""
-        group = QGroupBox("Wireframe Effects")
+        """Create controls for enhanced wireframe effects"""
+        group = QGroupBox("Wireframe Shapes")
         layout = QGridLayout()
 
-        # Enable wireframe cube
-        layout.addWidget(QLabel("Show Cube:"), 0, 0)
+        # Enable wireframe
+        layout.addWidget(QLabel("Show Wireframe:"), 0, 0)
         self.enable_wireframe_check = QCheckBox()
         self.enable_wireframe_check.setChecked(True)
         layout.addWidget(self.enable_wireframe_check, 0, 1)
 
-        # Cube size
-        layout.addWidget(QLabel("Cube Size:"), 1, 0)
-        self.cube_size_slider = QSlider(Qt.Horizontal)
-        self.cube_size_slider.setRange(50, 300)
-        self.cube_size_slider.setValue(100)
-        layout.addWidget(self.cube_size_slider, 1, 1)
-        self.cube_size_value = QLabel("100")
-        layout.addWidget(self.cube_size_value, 1, 2)
-        self.cube_size_slider.valueChanged.connect(
-            lambda v: self.cube_size_value.setText(str(v)))
+        # Shape type
+        layout.addWidget(QLabel("Shape:"), 1, 0)
+        self.wireframe_shape_combo = QComboBox()
+        self.wireframe_shape_combo.addItems([
+            "Cube", "Pyramid", "Sphere", "Octahedron",
+            "Dodecahedron", "Tetrahedron", "Torus"
+        ])
+        layout.addWidget(self.wireframe_shape_combo, 1, 1, 1, 2)
+
+        # Morph on change
+        layout.addWidget(QLabel("Morph on Change:"), 2, 0)
+        self.wireframe_morph_check = QCheckBox()
+        self.wireframe_morph_check.setChecked(True)
+        layout.addWidget(self.wireframe_morph_check, 2, 1)
+
+        # Shape size
+        layout.addWidget(QLabel("Size:"), 3, 0)
+        self.wireframe_size_slider = QSlider(Qt.Horizontal)
+        self.wireframe_size_slider.setRange(50, 300)
+        self.wireframe_size_slider.setValue(100)
+        layout.addWidget(self.wireframe_size_slider, 3, 1)
+        self.wireframe_size_value = QLabel("100")
+        layout.addWidget(self.wireframe_size_value, 3, 2)
+        self.wireframe_size_slider.valueChanged.connect(
+            lambda v: self.wireframe_size_value.setText(str(v)))
 
         # Rotation speed
-        layout.addWidget(QLabel("Rotation Speed:"), 2, 0)
-        self.cube_rotation_slider = QSlider(Qt.Horizontal)
-        self.cube_rotation_slider.setRange(0, 200)
-        self.cube_rotation_slider.setValue(100)
-        layout.addWidget(self.cube_rotation_slider, 2, 1)
-        self.cube_rotation_value = QLabel("1.0")
-        layout.addWidget(self.cube_rotation_value, 2, 2)
-        self.cube_rotation_slider.valueChanged.connect(
-            lambda v: self.cube_rotation_value.setText(str(v/100)))
-
-        # Color mode
-        layout.addWidget(QLabel("Cube Color:"), 3, 0)
-        self.cube_color_combo = QComboBox()
-        self.cube_color_combo.addItems(["Audio Reactive", "Solid", "Rainbow"])
-        layout.addWidget(self.cube_color_combo, 3, 1, 1, 2)
-
-        # Base color
-        layout.addWidget(QLabel("Base Color:"), 4, 0)
-        self.cube_color_btn = QPushButton()
-        self.cube_color_btn.setStyleSheet("background-color: #FFFFFF")
-        self.cube_color_btn.clicked.connect(self._select_cube_color)
-        layout.addWidget(self.cube_color_btn, 4, 1, 1, 2)
+        layout.addWidget(QLabel("Rotation Speed:"), 4, 0)
+        self.wireframe_rotation_slider = QSlider(Qt.Horizontal)
+        self.wireframe_rotation_slider.setRange(0, 200)
+        self.wireframe_rotation_slider.setValue(100)
+        layout.addWidget(self.wireframe_rotation_slider, 4, 1)
+        self.wireframe_rotation_value = QLabel("1.0")
+        layout.addWidget(self.wireframe_rotation_value, 4, 2)
+        self.wireframe_rotation_slider.valueChanged.connect(
+            lambda v: self.wireframe_rotation_value.setText(f"{v/100:.1f}"))
 
         group.setLayout(layout)
         return group
+
+    def _create_wireframe_visual_controls(self):
+        """Create controls for wireframe visual effects"""
+        group = QGroupBox("Wireframe Effects")
+        layout = QGridLayout()
+
+        # Color mode
+        layout.addWidget(QLabel("Color Mode:"), 0, 0)
+        self.wireframe_color_combo = QComboBox()
+        self.wireframe_color_combo.addItems([
+            "Audio Reactive", "Solid", "Rainbow", "Gradient"
+        ])
+        layout.addWidget(self.wireframe_color_combo, 0, 1, 1, 2)
+
+        # Primary color
+        layout.addWidget(QLabel("Primary Color:"), 1, 0)
+        self.wireframe_color_btn = QPushButton()
+        self.wireframe_color_btn.setStyleSheet("background-color: #FFFFFF")
+        self.wireframe_color_btn.clicked.connect(self._select_wireframe_color)
+        layout.addWidget(self.wireframe_color_btn, 1, 1, 1, 2)
+
+        # Secondary color
+        layout.addWidget(QLabel("Secondary Color:"), 2, 0)
+        self.wireframe_secondary_color_btn = QPushButton()
+        self.wireframe_secondary_color_btn.setStyleSheet("background-color: #00C8FF")
+        self.wireframe_secondary_color_btn.clicked.connect(self._select_wireframe_secondary_color)
+        layout.addWidget(self.wireframe_secondary_color_btn, 2, 1, 1, 2)
+
+        # Show vertices
+        layout.addWidget(QLabel("Show Vertices:"), 3, 0)
+        self.wireframe_vertices_check = QCheckBox()
+        self.wireframe_vertices_check.setChecked(False)
+        layout.addWidget(self.wireframe_vertices_check, 3, 1)
+
+        # Vertex size
+        layout.addWidget(QLabel("Vertex Size:"), 4, 0)
+        self.wireframe_vertex_slider = QSlider(Qt.Horizontal)
+        self.wireframe_vertex_slider.setRange(1, 10)
+        self.wireframe_vertex_slider.setValue(3)
+        layout.addWidget(self.wireframe_vertex_slider, 4, 1)
+        self.wireframe_vertex_value = QLabel("3")
+        layout.addWidget(self.wireframe_vertex_value, 4, 2)
+        self.wireframe_vertex_slider.valueChanged.connect(
+            lambda v: self.wireframe_vertex_value.setText(str(v)))
+
+        # Edge glow
+        layout.addWidget(QLabel("Edge Glow:"), 5, 0)
+        self.wireframe_glow_check = QCheckBox()
+        self.wireframe_glow_check.setChecked(False)
+        layout.addWidget(self.wireframe_glow_check, 5, 1)
+
+        # Glow intensity
+        layout.addWidget(QLabel("Glow Intensity:"), 6, 0)
+        self.wireframe_glow_slider = QSlider(Qt.Horizontal)
+        self.wireframe_glow_slider.setRange(10, 100)
+        self.wireframe_glow_slider.setValue(50)
+        layout.addWidget(self.wireframe_glow_slider, 6, 1)
+        self.wireframe_glow_value = QLabel("0.5")
+        layout.addWidget(self.wireframe_glow_value, 6, 2)
+        self.wireframe_glow_slider.valueChanged.connect(
+            lambda v: self.wireframe_glow_value.setText(f"{v/100:.1f}"))
+
+        group.setLayout(layout)
+        return group
+
+    def _create_wireframe_advanced_controls(self):
+        """Create advanced controls for wireframe effects"""
+        group = QGroupBox("Advanced Wireframe")
+        layout = QGridLayout()
+
+        # Multi-shape mode
+        layout.addWidget(QLabel("Multiple Shapes:"), 0, 0)
+        self.wireframe_multi_check = QCheckBox()
+        self.wireframe_multi_check.setChecked(False)
+        layout.addWidget(self.wireframe_multi_check, 0, 1)
+
+        # Shape count
+        layout.addWidget(QLabel("Shape Count:"), 1, 0)
+        self.wireframe_count_slider = QSlider(Qt.Horizontal)
+        self.wireframe_count_slider.setRange(2, 10)
+        self.wireframe_count_slider.setValue(3)
+        layout.addWidget(self.wireframe_count_slider, 1, 1)
+        self.wireframe_count_value = QLabel("3")
+        layout.addWidget(self.wireframe_count_value, 1, 2)
+        self.wireframe_count_slider.valueChanged.connect(
+            lambda v: self.wireframe_count_value.setText(str(v)))
+
+        # Show echo/trail
+        layout.addWidget(QLabel("Show Echo:"), 2, 0)
+        self.wireframe_echo_check = QCheckBox()
+        self.wireframe_echo_check.setChecked(False)
+        layout.addWidget(self.wireframe_echo_check, 2, 1)
+
+        # Echo count
+        layout.addWidget(QLabel("Echo Count:"), 3, 0)
+        self.wireframe_echo_count_slider = QSlider(Qt.Horizontal)
+        self.wireframe_echo_count_slider.setRange(1, 10)
+        self.wireframe_echo_count_slider.setValue(3)
+        layout.addWidget(self.wireframe_echo_count_slider, 3, 1)
+        self.wireframe_echo_count_value = QLabel("3")
+        layout.addWidget(self.wireframe_echo_count_value, 3, 2)
+        self.wireframe_echo_count_slider.valueChanged.connect(
+            lambda v: self.wireframe_echo_count_value.setText(str(v)))
+
+        # Echo opacity
+        layout.addWidget(QLabel("Echo Opacity:"), 4, 0)
+        self.wireframe_echo_opacity_slider = QSlider(Qt.Horizontal)
+        self.wireframe_echo_opacity_slider.setRange(10, 80)
+        self.wireframe_echo_opacity_slider.setValue(30)
+        layout.addWidget(self.wireframe_echo_opacity_slider, 4, 1)
+        self.wireframe_echo_opacity_value = QLabel("0.3")
+        layout.addWidget(self.wireframe_echo_opacity_value, 4, 2)
+        self.wireframe_echo_opacity_slider.valueChanged.connect(
+            lambda v: self.wireframe_echo_opacity_value.setText(f"{v/100:.1f}"))
+
+        # Auto morph
+        layout.addWidget(QLabel("Auto Morph:"), 5, 0)
+        self.wireframe_auto_morph_check = QCheckBox()
+        self.wireframe_auto_morph_check.setChecked(False)
+        layout.addWidget(self.wireframe_auto_morph_check, 5, 1)
+
+        # Morph on beat
+        layout.addWidget(QLabel("Morph on Beat:"), 6, 0)
+        self.wireframe_beat_morph_check = QCheckBox()
+        self.wireframe_beat_morph_check.setChecked(False)
+        layout.addWidget(self.wireframe_beat_morph_check, 6, 1)
+
+        group.setLayout(layout)
+        return group
+
+    def _select_wireframe_color(self):
+        """Open color dialog for wireframe primary color selection"""
+        color = QColorDialog.getColor(QColor(255, 255, 255), self, "Select Wireframe Color")
+        if color.isValid():
+            self.wireframe_color_btn.setStyleSheet(f"background-color: {color.name()}")
+
+    def _select_wireframe_secondary_color(self):
+        """Open color dialog for wireframe secondary color selection"""
+        color = QColorDialog.getColor(QColor(0, 200, 255), self, "Select Wireframe Secondary Color")
+        if color.isValid():
+            self.wireframe_secondary_color_btn.setStyleSheet(f"background-color: {color.name()}")
+
+
 
     def _select_cube_color(self):
         """Open color dialog for cube color selection"""
