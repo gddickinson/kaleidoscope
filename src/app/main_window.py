@@ -82,7 +82,7 @@ class MainWindow(QMainWindow):
         self.control_panel.freq_display_check.stateChanged.connect(self.toggle_freq_display)
         self.control_panel.freq_height_slider.valueChanged.connect(self.set_freq_display_height)
 
-        # Connect Apply button (we'll update this every time a control changes)
+        # Connect all controls including wireframe controls
         for obj in self.control_panel.findChildren(QSlider) + \
                   self.control_panel.findChildren(QComboBox) + \
                   self.control_panel.findChildren(QSpinBox) + \
@@ -101,6 +101,11 @@ class MainWindow(QMainWindow):
             lambda: self.apply_settings_after_delay())
         self.control_panel.secondary_color_btn.clicked.connect(
             lambda: self.apply_settings_after_delay())
+
+        # Connect wireframe color button
+        if hasattr(self.control_panel, 'cube_color_btn'):
+            self.control_panel.cube_color_btn.clicked.connect(
+                lambda: self.apply_settings_after_delay())
 
     def toggle_freq_display(self, state):
         """Toggle visibility of the frequency display"""

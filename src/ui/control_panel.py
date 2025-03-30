@@ -492,17 +492,32 @@ class ControlPanel(QWidget):
             self.highs_slider.value() / 100
         )
 
-        # Apply wireframe settings
-        engine.set_wireframe_enabled(self.enable_wireframe_check.isChecked())
-        engine.set_wireframe_parameters(
-            self.cube_size_slider.value(),
-            self.cube_rotation_slider.value() / 100,
-            self.cube_color_combo.currentText().lower().replace(" ", "_")
-        )
+        # Apply wireframe settings with debugging
+        try:
+            # Check if wireframe controls exist
+            if hasattr(self, 'enable_wireframe_check'):
+                wireframe_enabled = self.enable_wireframe_check.isChecked()
+                cube_size = self.cube_size_slider.value()
+                rotation_speed = self.cube_rotation_slider.value() / 100
 
-        cube_color = QColor()
-        cube_color.setNamedColor(self.cube_color_btn.styleSheet().split(":")[1].strip())
-        engine.set_wireframe_color(cube_color)
+                # Get color mode with proper conversion
+                color_mode = self.cube_color_combo.currentText().lower().replace(" ", "_")
+
+                print(f"Setting wireframe: enabled={wireframe_enabled}, size={cube_size}, speed={rotation_speed}, mode={color_mode}")
+
+                # Set wireframe enabled state
+                engine.set_wireframe_enabled(wireframe_enabled)
+
+                # Set wireframe parameters
+                engine.set_wireframe_parameters(cube_size, rotation_speed, color_mode)
+
+                # Set cube color if in solid mode
+                if color_mode == "solid":
+                    cube_color = QColor()
+                    cube_color.setNamedColor(self.cube_color_btn.styleSheet().split(":")[1].strip())
+                    engine.set_wireframe_color(cube_color)
+        except Exception as e:
+            print(f"Error applying wireframe settings: {e}")
 
     def _create_wireframe_controls(self):
         """Create controls for wireframe effects"""

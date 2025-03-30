@@ -284,17 +284,17 @@ class WireframeCube:
             (0, 4), (1, 5), (2, 6), (3, 7)   # Connecting edges
         ]
 
-    def update(self, bass, mids, highs, volume):
+    def update(self, bass, mids, highs, volume, rotation_speed=1.0):
         """Update cube rotation and effects based on audio"""
-        # Rotate cube based on different frequency bands
-        self.rotation_x += bass * 0.01
-        self.rotation_y += mids * 0.008
-        self.rotation_z += highs * 0.005
+        # Rotate cube based on different frequency bands, modified by rotation speed
+        self.rotation_x += bass * 0.01 * rotation_speed
+        self.rotation_y += mids * 0.008 * rotation_speed
+        self.rotation_z += highs * 0.005 * rotation_speed
 
         # Pulse size with beat detection
         self.pulse_size = 1.0 + volume * 0.5
 
-        # Change color based on frequencies
+        # Change color based on frequencies or color mode
         r = min(255, int(bass * 150 + 100))
         g = min(255, int(mids * 150 + 100))
         b = min(255, int(highs * 150 + 100))

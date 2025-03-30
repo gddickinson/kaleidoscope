@@ -152,7 +152,8 @@ class KaleidoscopeEngine(QObject):
                 self.bands[0] * self.bass_influence,
                 self.bands[1] * self.mids_influence,
                 self.bands[2] * self.highs_influence,
-                self.volume
+                self.volume,
+                self.cube_rotation_speed  # Pass the rotation speed
             )
 
 
@@ -299,8 +300,7 @@ class KaleidoscopeEngine(QObject):
             }
         )
 
-
-        # Render wireframe cube after the kaleidoscope but before effects
+        # Render wireframe cube after the kaleidoscope effect but before ending painter
         if self.enable_wireframe:
             self.wireframe_cube.render(
                 final_painter,
@@ -309,9 +309,7 @@ class KaleidoscopeEngine(QObject):
                 self.perspective
             )
 
-        final_painter.end()
-
-
+        # End painter after all rendering is done
         final_painter.end()
 
         # Apply post-processing effects
@@ -439,9 +437,17 @@ class KaleidoscopeEngine(QObject):
 
     def set_wireframe_parameters(self, size, rotation_speed, color_mode):
         """Set wireframe cube parameters"""
-        self.wireframe_cube.size = size
+        # Update the wireframe cube size
+        self.wireframe_cube = WireframeCube(size=size)
+
+        # Update rotation speed multiplier
         self.cube_rotation_speed = rotation_speed
+
+        # Set color mode
         self.cube_color_mode = color_mode
+
+        # Debug print to verify settings are applied
+        print(f"Wireframe settings applied: size={size}, speed={rotation_speed}, mode={color_mode}")
 
     def set_wireframe_color(self, color):
         """Set wireframe cube base color"""
