@@ -38,7 +38,7 @@ class ControlPanel(QWidget):
         wireframe_layout = QVBoxLayout()
         wireframe_tab.setLayout(wireframe_layout)
 
-        # New tab for particle effects
+        # Tab for particle effects
         effects_tab = QWidget()
         effects_layout = QVBoxLayout()
         effects_tab.setLayout(effects_layout)
@@ -68,6 +68,7 @@ class ControlPanel(QWidget):
         # Add control groups to Effects tab
         effects_layout.addWidget(self._create_particle_effects_controls())
         effects_layout.addWidget(self._create_effect_types_controls())
+        effects_layout.addWidget(self._create_tunnel_controls())  # Add tunnel controls
         effects_layout.addWidget(self._create_effects_reactivity_controls())
         effects_layout.addStretch(1)
 
@@ -529,6 +530,13 @@ class ControlPanel(QWidget):
             self.effects_highs_slider.setValue(50)
             self.effects_volume_slider.setValue(80)
 
+        # Reset tunnel settings
+        if hasattr(self, 'tunnel_enable_check'):
+            self.tunnel_enable_check.setChecked(False)
+            self.tunnel_auto_change_check.setChecked(True)
+            self.tunnel_interval_slider.setValue(600)
+            self.tunnel_direction_combo.setCurrentIndex(0)  # Auto
+
 
     def apply_to_engine(self, engine, audio_processor):
         """Apply all settings to the engine and audio processor"""
@@ -740,6 +748,21 @@ class ControlPanel(QWidget):
                     volume = self.effects_volume_slider.value() / 100.0
 
                     engine.set_effects_audio_reactivity(bass, mids, highs, volume)
+
+                # Set tunnel settings
+                if hasattr(self, 'tunnel_enable_check'):
+                    # Enable/disable tunnel
+                    tunnel_enabled = self.tunnel_enable_check.isChecked()
+                    engine.set_tunnel_enabled(tunnel_enabled)
+
+                    # Set auto-change settings
+                    auto_change = self.tunnel_auto_change_check.isChecked()
+                    interval = self.tunnel_interval_slider.value()
+                    engine.set_tunnel_auto_change(auto_change, interval)
+
+                    # Set direction
+                    direction = self.tunnel_direction_combo.currentText().lower()
+                    engine.set_tunnel_direction(direction)
 
         except Exception as e:
             print(f"Error applying particle effects settings: {e}")
@@ -1238,6 +1261,43 @@ class ControlPanel(QWidget):
         layout.addWidget(self.effects_volume_value, 3, 2)
         self.effects_volume_slider.valueChanged.connect(
             lambda v: self.effects_volume_value.setText(f"{v/100:.1f}"))
+
+        group.setLayout(layout)
+        return group
+
+    def _create_tunnel_controls(self):
+        """Create controls for particle tunnel effect"""
+        group = QGroupBox("Particle Tunnel")
+        layout = QGridLayout()
+
+        # Enable tunnel
+        layout.addWidget(QLabel("Enable Tunnel:"), 0, 0)
+        self.tunnel_enable_check = QCheckBox()
+        self.tunnel_enable_check.setChecked(False)
+        layout.addWidget(self.tunnel_enable_check, 0, 1)
+
+        # Auto-change settings
+        layout.addWidget(QLabel("Auto-change:"), 1, 0)
+        self.tunnel_auto_change_check = QCheckBox()
+        self.tunnel_auto_change_check.setChecked(True)
+        layout.addWidget(self.tunnel_auto_change_check, 1, 1)
+
+        # Change interval
+        layout.addWidget(QLabel("Change Interval:"), 2, 0)
+        self.tunnel_interval_slider = QSlider(Qt.Horizontal)
+        self.tunnel_interval_slider.setRange(300, 1200)
+        self.tunnel_interval_slider.setValue(600)
+        layout.addWidget(self.tunnel_interval_slider, 2, 1)
+        self.tunnel_interval_value = QLabel("10s")
+        layout.addWidget(self.tunnel_interval_value, 2, 2)
+        self.tunnel_interval_slider.valueChanged.connect(
+            lambda v: self.tunnel_interval_value.setText(f"{v/60:.1f}s"))
+
+        # Force flow direction
+        layout.addWidget(QLabel("Flow Direction:"), 3, 0)
+        self.tunnel_direction_combo = QComboBox()
+        self.tunnel_direction_combo.addItems(["Auto", "Inward", "Outward"])
+        layout.addWidget(self.tunnel_direction_combo, 3, 1, 1, 2)
 
         group.setLayout(layout)
         return group

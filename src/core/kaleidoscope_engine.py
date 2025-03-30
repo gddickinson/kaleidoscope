@@ -608,3 +608,32 @@ class KaleidoscopeEngine(QObject):
     def set_effects_audio_reactivity(self, bass, mids, highs, volume):
         """Set effects audio reactivity parameters"""
         self.effects_manager.set_audio_reactivity(bass, mids, highs, volume)
+
+
+    def set_tunnel_enabled(self, enabled):
+        """Enable or disable the particle tunnel effect"""
+        try:
+            self.effects_manager.set_tunnel_enabled(enabled)
+        except Exception as e:
+            print(f"Error setting tunnel enabled: {e}")
+
+    def set_tunnel_auto_change(self, enabled, interval):
+        """Set tunnel auto-change settings"""
+        try:
+            self.effects_manager.set_tunnel_auto_change(enabled, interval)
+        except Exception as e:
+            print(f"Error setting tunnel auto-change: {e}")
+
+    def set_tunnel_direction(self, direction):
+        """Set tunnel flow direction"""
+        try:
+            # Get active tunnel
+            tunnel = self.effects_manager.active_tunnel
+            if tunnel:
+                if direction == "inward":
+                    tunnel.flow_direction = -1
+                elif direction == "outward":
+                    tunnel.flow_direction = 1
+                # "auto" is handled by the effect itself
+        except Exception as e:
+            print(f"Error setting tunnel direction: {e}")

@@ -535,7 +535,8 @@ class EffectsManager:
             "spark": SparkBurst,
             "flare": FlareEmission,
             "firework": FireworkExplosion,
-            "mist": MistCloud
+            "mist": MistCloud,
+            "tunnel": ParticleTunnel  # Add new tunnel effect
         }
 
         # Effect generation parameters
@@ -553,12 +554,20 @@ class EffectsManager:
         self.random_generation = True
         self.generation_chance = 0.01  # Chance per frame to generate a random effect
 
+        # Tunnel effect settings
+        self.tunnel_enabled = False  # Off by default
+        self.active_tunnel = None  # Reference to active tunnel effect
+        self.tunnel_auto_change = True  # Change tunnel settings automatically
+        self.tunnel_change_interval = 600  # Frames between tunnel changes (10 seconds at 60fps)
+        self.tunnel_change_timer = 0
+
         # Effect type weights (higher = more common)
         self.effect_weights = {
             "spark": 40,
             "flare": 30,
             "firework": 15,
-            "mist": 15
+            "mist": 15,
+            "tunnel": 0  # Don't randomly generate tunnels
         }
 
         # Audio reactivity settings
@@ -572,13 +581,34 @@ class EffectsManager:
             "spark": True,
             "flare": True,
             "firework": True,
-            "mist": True
+            "mist": True,
+            "tunnel": False  # Off by default
         }
 
     def update(self, spectrum, bands, volume, is_beat=False):
         """Update all effects and potentially generate new ones"""
         if not self.enabled:
             return
+
+        # Handle tunnel effect separately from other effects
+        if self.tunnel_enabled and self.effect_enabled["tunnel"]:
+            # Check if we need to create a tunnel
+            if not self.active_tunnel:
+                self.active_tunnel = ParticleTunnel(self.center_x, self.center_y, self.radius)
+                self.active_tunnel.start()
+                self.effects.append(self.active_tunnel)
+
+            # Check if we need to change tunnel settings
+            if self.tunnel_auto_change:
+                self.tunnel_change_timer += 1
+                if self.tunnel_change_timer >= self.tunnel_change_interval:
+                    self._change_tunnel_settings(bands[0], bands[1], bands[2], volume)
+                    self.tunnel_change_timer = 0
+        else:
+            # Disable tunnel if setting is off
+            if self.active_tunnel:
+                self.active_tunnel.active = False
+                self.active_tunnel = None
 
         # Process beat-based generation
         if self.generate_on_beat and is_beat and volume > self.beat_threshold:
@@ -603,8 +633,8 @@ class EffectsManager:
                 volume * self.volume_reactivity
             )
 
-        # Remove inactive effects
-        self.effects = [e for e in self.effects if e.active]
+        # Remove inactive effects (keep tunnel if it exists)
+        self.effects = [e for e in self.effects if e.active or e == self.active_tunnel]
 
     def render(self, painter):
         """Render all active effects"""
@@ -613,6 +643,39 @@ class EffectsManager:
 
         for effect in self.effects:
             effect.render(painter)
+
+    def _change_tunnel_settings(self, bass, mids, highs, volume):
+        """Change tunnel effect settings randomly"""
+        if not self.active_tunnel:
+            return
+
+        # Change flow direction on bass hit
+        if bass > 0.6 and random.random() < 0.3:
+            self.active_tunnel.flow_direction *= -1
+
+        # Change spiral effect
+        if random.random() < 0.3:
+            self.active_tunnel.spiral_effect = not self.active_tunnel.spiral_effect
+
+        # Change flow speed based on overall energy
+        energy = bass + mids + highs
+        self.active_tunnel.flow_speed = 0.5 + energy
+
+    # New method to set tunnel settings
+    def set_tunnel_enabled(self, enabled):
+        """Enable or disable the tunnel effect"""
+        self.tunnel_enabled = enabled
+        self.effect_enabled["tunnel"] = enabled
+
+        # Clear existing tunnel if disabling
+        if not enabled and self.active_tunnel:
+            self.active_tunnel.active = False
+            self.active_tunnel = None
+
+    def set_tunnel_auto_change(self, enabled, interval=600):
+        """Set whether the tunnel should automatically change settings"""
+        self.tunnel_auto_change = enabled
+        self.tunnel_change_interval = interval
 
     def generate_effect_on_beat(self, bass, mids, highs, volume):
         """Generate effects triggered by beats"""
@@ -746,3 +809,316 @@ class EffectsManager:
 
         # Fallback (shouldn't happen)
         return random.choice(list(weights.keys()))
+
+class TunnelParticle(Particle):
+    """Particle that creates a 3D tunnel effect flowing toward or away from viewer"""
+    def __init__(self, center_x, center_y, z=0):
+        # Initialize with position at center, but variable z depth
+        super().__init__(center_x, center_y, z)
+
+        # Set particle properties
+        self.base_size = random.uniform(1, 6)  # Base size (will change with z position)
+        self.size = self.base_size
+
+        # Generate random position on a ring
+        angle = random.uniform(0, math.pi * 2)
+        dist = random.uniform(10, 100)  # Start distance from center
+
+        # Set x,y position on the ring
+        self.x = center_x + math.cos(angle) * dist
+        self.y = center_y + math.sin(angle) * dist
+
+        # Set z position (depth)
+        self.z = random.uniform(-500, -100)
+
+        # Flow direction (toward or away from viewer)
+        self.flow_direction = random.choice([-1, 1])  # -1 = toward viewer, 1 = away
+
+        # Flow speed (affected by audio)
+        self.base_speed = random.uniform(2, 8)
+        self.current_speed = self.base_speed
+
+        # Color (will vary based on z position)
+        hue = random.random()
+        self.hue = hue  # Store original hue for later modification
+        self.saturation = random.uniform(0.7, 1.0)
+        self.value = random.uniform(0.8, 1.0)
+
+        r, g, b = [int(c * 255) for c in colorsys.hsv_to_rgb(hue, self.saturation, self.value)]
+        self.color = QColor(r, g, b)
+
+        # Longer lifetime than other particles
+        self.fade_rate = 0  # Don't fade automatically, reset when out of bounds
+        self.max_lifetime = 1000
+
+        # Store original position for spiral movement
+        self.original_angle = angle
+        self.original_dist = dist
+        self.spiral_amount = 0  # How much spiral effect to apply
+        self.spiral_speed = random.uniform(0.0005, 0.002)
+
+        # Trail behind the particle (optional)
+        self.trail = []
+        self.trail_length = random.randint(3, 10) if random.random() < 0.3 else 0  # Only some particles have trails
+
+    def update(self, bass, mids, highs, volume):
+        """Update tunnel particle position and state"""
+        # Store position in trail if enabled
+        if self.trail_length > 0:
+            self.trail.append((self.x, self.y, self.z))
+            if len(self.trail) > self.trail_length:
+                self.trail.pop(0)
+
+        # Update spiral amount based on mids
+        self.spiral_amount += self.spiral_speed * (1.0 + mids * 2)
+
+        # Update speed based on audio
+        self.current_speed = self.base_speed * (1.0 + bass * 2)
+
+        # Move along z-axis based on flow direction
+        self.z += self.current_speed * self.flow_direction
+
+        # Calculate new x,y position based on spiral effect
+        angle = self.original_angle + self.spiral_amount
+        dist = self.original_dist * (abs(self.z) / 400)  # Distance increases with depth
+
+        # Calculate center-relative coordinates
+        center_x = self.x - (self.x - self.original_dist * math.cos(self.original_angle))
+        center_y = self.y - (self.y - self.original_dist * math.sin(self.original_angle))
+
+        self.x = center_x + math.cos(angle) * dist
+        self.y = center_y + math.sin(angle) * dist
+
+        # Reset if particle goes beyond view bounds
+        if (self.flow_direction < 0 and self.z > 50) or (self.flow_direction > 0 and self.z < -1000):
+            self.reset_position(center_x, center_y)
+
+        # Update size based on z position (perspective effect)
+        z_factor = 1000 / (1000 + abs(self.z))
+        self.size = self.base_size * z_factor * (1.0 + volume * 0.5)
+
+        # Update color based on audio
+        # Shift hue based on highs
+        hue_shift = (highs * 0.2) % 1.0
+        new_hue = (self.hue + hue_shift) % 1.0
+
+        # Increase saturation with bass
+        new_saturation = min(1.0, self.saturation + bass * 0.3)
+
+        # Increase brightness with volume
+        new_value = min(1.0, self.value + volume * 0.3)
+
+        # Apply new color
+        r, g, b = [int(c * 255) for c in colorsys.hsv_to_rgb(new_hue, new_saturation, new_value)]
+        self.color = QColor(r, g, b)
+
+        # Update lifetime
+        self.lifetime += 1
+        if self.lifetime >= self.max_lifetime:
+            self.active = False
+
+    def reset_position(self, center_x, center_y):
+        """Reset particle to new position when it goes out of bounds"""
+        # Clear trail
+        self.trail = []
+
+        # New random angle and distance
+        self.original_angle = random.uniform(0, math.pi * 2)
+        self.original_dist = random.uniform(10, 100)
+
+        # Reset z position based on flow direction
+        if self.flow_direction < 0:  # Toward viewer
+            self.z = random.uniform(-500, -300)
+        else:  # Away from viewer
+            self.z = random.uniform(-100, 50)
+
+        # Reset lifetime
+        self.lifetime = 0
+
+        # Reset color
+        self.hue = random.random()
+        r, g, b = [int(c * 255) for c in colorsys.hsv_to_rgb(self.hue, self.saturation, self.value)]
+        self.color = QColor(r, g, b)
+
+    def render(self, painter, center_x, center_y, perspective=800):
+        """Render the tunnel particle with perspective and optional trail"""
+        if not self.active:
+            return
+
+        # Apply perspective projection to get screen coordinates
+        # z ranges from about -500 to 50
+        z_factor = perspective / (perspective - self.z)
+
+        # Project particle position
+        screen_x = center_x + (self.x - center_x) * z_factor
+        screen_y = center_y + (self.y - center_y) * z_factor
+
+        # Calculate alpha based on z position
+        # Particles fade in as they approach viewer
+        if self.flow_direction < 0:  # Toward viewer
+            # Ensure alpha is in the valid range [0, 255]
+            alpha = max(0, min(255, int(255 * min(1.0, (500 + self.z) / 500))))
+        else:  # Away from viewer
+            # Ensure alpha is in the valid range [0, 255]
+            alpha = max(0, min(255, int(255 * min(1.0, (1000 - abs(self.z)) / 500))))
+
+        # Draw trail if enabled
+        if self.trail_length > 0 and len(self.trail) > 1:
+            # Draw lines connecting trail points
+            prev_x, prev_y = None, None
+
+            for i, (trail_x, trail_y, trail_z) in enumerate(reversed(self.trail)):
+                # Apply perspective to trail point
+                trail_z_factor = perspective / (perspective - trail_z)
+                trail_screen_x = center_x + (trail_x - center_x) * trail_z_factor
+                trail_screen_y = center_y + (trail_y - center_y) * trail_z_factor
+
+                # Calculate trail segment alpha (ensure it's in valid range)
+                segment_ratio = i / len(self.trail)
+                trail_alpha = max(0, min(255, int(alpha * segment_ratio)))
+
+                # Set color with alpha
+                trail_color = QColor(self.color)
+                trail_color.setAlpha(trail_alpha)
+
+                # Set pen for trail line
+                pen = QPen(trail_color)
+                pen_width = max(1, int(self.size * trail_z_factor * 0.5))
+                pen.setWidth(pen_width)
+                painter.setPen(pen)
+
+                # Draw line segment if we have a previous point
+                if prev_x is not None and prev_y is not None:
+                    painter.drawLine(
+                        int(trail_screen_x),
+                        int(trail_screen_y),
+                        int(prev_x),
+                        int(prev_y)
+                    )
+
+                prev_x, prev_y = trail_screen_x, trail_screen_y
+
+        # Draw the main particle
+        # Set color with calculated alpha
+        particle_color = QColor(self.color)
+        particle_color.setAlpha(alpha)
+
+        # Apply size based on perspective
+        screen_size = self.size * z_factor
+
+        # Draw the particle
+        painter.setBrush(QBrush(particle_color))
+        painter.setPen(Qt.NoPen)
+        painter.drawEllipse(
+            int(screen_x - screen_size/2),
+            int(screen_y - screen_size/2),
+            int(screen_size),
+            int(screen_size)
+        )
+
+class ParticleTunnel(ParticleEffect):
+    """Creates a 3D tunnel of flowing particles reacting to music"""
+    def __init__(self, center_x, center_y, radius):
+        super().__init__(center_x, center_y, radius)
+        self.max_lifetime = float('inf')  # Tunnel continues indefinitely
+        self.particle_count = random.randint(100, 200)
+
+        # Tunnel parameters
+        self.flow_direction = random.choice([-1, 1])  # -1 = toward viewer, 1 = away
+        self.flow_speed = 1.0
+        self.rotation_speed = random.uniform(0.001, 0.005)
+        self.tunnel_radius = radius * 0.8
+
+        # Pulse effect settings
+        self.enable_pulse = True
+        self.pulse_amount = 0
+        self.pulse_speed = 0.02
+        self.pulse_decay = 0.98
+
+        # Enable spiral effect
+        self.spiral_effect = random.choice([True, False])
+        self.spiral_amount = 0
+        self.spiral_speed = random.uniform(0.0001, 0.001)
+
+        # Audio reactivity settings
+        self.speed_reactivity = random.uniform(0.5, 1.5)
+        self.size_reactivity = random.uniform(0.5, 1.5)
+        self.color_reactivity = random.uniform(0.5, 1.5)
+
+        # Fog effect (particles more visible at certain depths)
+        self.enable_fog = True
+        self.fog_near = -100
+        self.fog_far = -500
+
+        # Tunnel shape variations
+        self.shape_variability = 0  # 0 = perfect circle, higher = more variation
+
+        # Generate particles on startup
+        self.generate_particles()
+
+    def generate_particles(self):
+        """Generate particles arranged in a tunnel formation"""
+        self.particles = []
+
+        for _ in range(self.particle_count):
+            # Create tunnel particle
+            particle = TunnelParticle(self.center_x, self.center_y)
+
+            # Override some settings to match tunnel config
+            particle.flow_direction = self.flow_direction
+
+            # Add to active particles
+            self.particles.append(particle)
+
+    def update(self, bass, mids, highs, volume):
+        """Update tunnel effect based on audio analysis"""
+        super().update(bass, mids, highs, volume)
+
+        # Update pulse effect on beat
+        if bass > 0.6 and random.random() < bass * 0.3:
+            # Strong bass hit - trigger pulse
+            self.pulse_amount = 0.5 + bass * 0.5
+
+        # Apply pulse decay
+        self.pulse_amount *= self.pulse_decay
+
+        # Update spiral amount
+        if self.spiral_effect:
+            self.spiral_amount += self.spiral_speed * (1.0 + mids * 2)
+
+        # Update flow speed based on audio energy
+        self.flow_speed = 1.0 + (volume * 3 * self.speed_reactivity)
+
+        # Occasionally change flow direction on strong beat
+        if bass > 0.8 and random.random() < 0.05:
+            self.flow_direction *= -1
+
+        # Update for particles that need respawning (instead of removing them)
+        for particle in self.particles:
+            if not particle.active:
+                # Reset instead of removing
+                particle.reset_position(self.center_x, self.center_y)
+                particle.active = True
+
+                # Apply current tunnel settings
+                particle.flow_direction = self.flow_direction
+
+    def render(self, painter):
+        """Render the tunnel effect with depth sorting"""
+        if not self.active or not self.particles:
+            return
+
+        # Sort particles by Z depth for proper rendering
+        # When flowing toward viewer (negative direction), render back-to-front
+        # When flowing away (positive direction), render front-to-back
+        if self.flow_direction < 0:
+            # Sort from back to front (most negative z first)
+            sorted_particles = sorted(self.particles, key=lambda p: p.z)
+        else:
+            # Sort from front to back (most positive z first)
+            sorted_particles = sorted(self.particles, key=lambda p: -p.z)
+
+        # Render each particle with proper depth perspective
+        for particle in sorted_particles:
+            if particle.active:
+                particle.render(painter, self.center_x, self.center_y, 800)
