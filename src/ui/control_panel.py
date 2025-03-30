@@ -33,10 +33,15 @@ class ControlPanel(QWidget):
         vis_layout = QVBoxLayout()
         vis_tab.setLayout(vis_layout)
 
-        # New tab just for wireframe settings
+        # Tab for wireframe settings
         wireframe_tab = QWidget()
         wireframe_layout = QVBoxLayout()
         wireframe_tab.setLayout(wireframe_layout)
+
+        # New tab for particle effects
+        effects_tab = QWidget()
+        effects_layout = QVBoxLayout()
+        effects_tab.setLayout(effects_layout)
 
         # Add control groups to Visual tab
         visual_layout.addWidget(self._create_general_controls())
@@ -60,11 +65,18 @@ class ControlPanel(QWidget):
         wireframe_layout.addWidget(self._create_wireframe_advanced_controls())
         wireframe_layout.addStretch(1)
 
+        # Add control groups to Effects tab
+        effects_layout.addWidget(self._create_particle_effects_controls())
+        effects_layout.addWidget(self._create_effect_types_controls())
+        effects_layout.addWidget(self._create_effects_reactivity_controls())
+        effects_layout.addStretch(1)
+
         # Add tabs to tab widget
         self.tab_widget.addTab(visual_tab, "Visual Controls")
         self.tab_widget.addTab(technical_tab, "Technical Controls")
         self.tab_widget.addTab(vis_tab, "Visualizations")
         self.tab_widget.addTab(wireframe_tab, "Wireframe Shapes")
+        self.tab_widget.addTab(effects_tab, "Particle Effects")
 
         # Add tab widget to main layout
         main_layout.addWidget(self.tab_widget)
@@ -490,6 +502,34 @@ class ControlPanel(QWidget):
             self.waveform_reflection_check.setChecked(True)
             self.waveform_reflection_slider.setValue(30)
 
+        # Reset particle effects controls
+        if hasattr(self, 'enable_effects_check'):
+            self.enable_effects_check.setChecked(True)
+            self.effects_intensity_slider.setValue(100)
+            self.effects_beat_check.setChecked(True)
+            self.effects_beat_threshold_slider.setValue(50)
+            self.effects_random_check.setChecked(True)
+            self.effects_random_slider.setValue(10)
+
+        # Reset effect types
+        if hasattr(self, 'effect_spark_check'):
+            self.effect_spark_check.setChecked(True)
+            self.effect_spark_weight_slider.setValue(40)
+            self.effect_flare_check.setChecked(True)
+            self.effect_flare_weight_slider.setValue(30)
+            self.effect_firework_check.setChecked(True)
+            self.effect_firework_weight_slider.setValue(15)
+            self.effect_mist_check.setChecked(True)
+            self.effect_mist_weight_slider.setValue(15)
+
+        # Reset effects reactivity
+        if hasattr(self, 'effects_bass_slider'):
+            self.effects_bass_slider.setValue(100)
+            self.effects_mids_slider.setValue(70)
+            self.effects_highs_slider.setValue(50)
+            self.effects_volume_slider.setValue(80)
+
+
     def apply_to_engine(self, engine, audio_processor):
         """Apply all settings to the engine and audio processor"""
         if not engine or not audio_processor:
@@ -548,13 +588,18 @@ class ControlPanel(QWidget):
                 # Enable/disable wireframe
                 engine.set_wireframe_enabled(self.enable_wireframe_check.isChecked())
 
-                # Set edge visibility (new setting)
+                # Set edge visibility
                 if hasattr(self, 'wireframe_edges_check'):
                     engine.set_wireframe_edges_visible(self.wireframe_edges_check.isChecked())
 
                 # Get shape type from combo box, ensuring lowercase
-                shape_type = self.wireframe_shape_combo.currentText().lower()
-                print(f"Selected shape type: {shape_type}")
+                shape_type = self.wireframe_shape_combo.currentText().lower().strip()
+                print(f"Selected shape type from UI: {shape_type}")
+
+                # Debug available shape types
+                wireframe_shape_types = ["cube", "pyramid", "sphere", "octahedron",
+                                         "dodecahedron", "tetrahedron", "torus"]
+                print(f"Available shape types: {wireframe_shape_types}")
 
                 # Get morph option
                 morph_enabled = self.wireframe_morph_check.isChecked()
@@ -649,6 +694,57 @@ class ControlPanel(QWidget):
             print(f"Error applying waveform settings: {e}")
 
 
+        # Apply particle effects settings with error handling
+        try:
+            # Check if effects controls exist
+            if hasattr(self, 'enable_effects_check'):
+                # Enable/disable effects
+                engine.set_effects_enabled(self.enable_effects_check.isChecked())
+
+                # Set intensity
+                intensity = self.effects_intensity_slider.value() / 100.0
+                engine.set_effects_intensity(intensity)
+
+                # Set beat response
+                beat_enabled = self.effects_beat_check.isChecked()
+                beat_threshold = self.effects_beat_threshold_slider.value() / 100.0
+                engine.set_effects_beat_response(beat_enabled, beat_threshold)
+
+                # Set random generation
+                random_enabled = self.effects_random_check.isChecked()
+                random_chance = self.effects_random_slider.value() / 1000.0
+                engine.set_effects_random_generation(random_enabled, random_chance)
+
+                # Set effect types
+                if hasattr(self, 'effect_spark_check'):
+                    # Enable/disable specific effect types
+                    engine.set_effect_type_enabled("spark", self.effect_spark_check.isChecked())
+                    engine.set_effect_type_enabled("flare", self.effect_flare_check.isChecked())
+                    engine.set_effect_type_enabled("firework", self.effect_firework_check.isChecked())
+                    engine.set_effect_type_enabled("mist", self.effect_mist_check.isChecked())
+
+                    # Set weights
+                    weights = {
+                        "spark": self.effect_spark_weight_slider.value(),
+                        "flare": self.effect_flare_weight_slider.value(),
+                        "firework": self.effect_firework_weight_slider.value(),
+                        "mist": self.effect_mist_weight_slider.value()
+                    }
+                    engine.set_effects_weights(weights)
+
+                # Set audio reactivity
+                if hasattr(self, 'effects_bass_slider'):
+                    bass = self.effects_bass_slider.value() / 100.0
+                    mids = self.effects_mids_slider.value() / 100.0
+                    highs = self.effects_highs_slider.value() / 100.0
+                    volume = self.effects_volume_slider.value() / 100.0
+
+                    engine.set_effects_audio_reactivity(bass, mids, highs, volume)
+
+        except Exception as e:
+            print(f"Error applying particle effects settings: {e}")
+            import traceback
+            traceback.print_exc()
 
     def _create_wireframe_controls(self):
         """Create controls for enhanced wireframe effects"""
@@ -962,3 +1058,186 @@ class ControlPanel(QWidget):
         color = QColorDialog.getColor(QColor(0, 200, 255), self, "Select Waveform Secondary Color")
         if color.isValid():
             self.waveform_secondary_color_btn.setStyleSheet(f"background-color: {color.name()}")
+
+    def _create_particle_effects_controls(self):
+        """Create controls for particle effects"""
+        group = QGroupBox("Particle Effects")
+        layout = QGridLayout()
+
+        # Enable effects
+        layout.addWidget(QLabel("Enable Effects:"), 0, 0)
+        self.enable_effects_check = QCheckBox()
+        self.enable_effects_check.setChecked(True)
+        layout.addWidget(self.enable_effects_check, 0, 1)
+
+        # Intensity
+        layout.addWidget(QLabel("Intensity:"), 1, 0)
+        self.effects_intensity_slider = QSlider(Qt.Horizontal)
+        self.effects_intensity_slider.setRange(10, 200)
+        self.effects_intensity_slider.setValue(100)
+        layout.addWidget(self.effects_intensity_slider, 1, 1)
+        self.effects_intensity_value = QLabel("1.0")
+        layout.addWidget(self.effects_intensity_value, 1, 2)
+        self.effects_intensity_slider.valueChanged.connect(
+            lambda v: self.effects_intensity_value.setText(f"{v/100:.1f}"))
+
+        # Generate on beat
+        layout.addWidget(QLabel("On Beat:"), 2, 0)
+        self.effects_beat_check = QCheckBox()
+        self.effects_beat_check.setChecked(True)
+        layout.addWidget(self.effects_beat_check, 2, 1)
+
+        # Beat threshold
+        layout.addWidget(QLabel("Beat Sensitivity:"), 3, 0)
+        self.effects_beat_threshold_slider = QSlider(Qt.Horizontal)
+        self.effects_beat_threshold_slider.setRange(10, 90)
+        self.effects_beat_threshold_slider.setValue(50)
+        layout.addWidget(self.effects_beat_threshold_slider, 3, 1)
+        self.effects_beat_threshold_value = QLabel("0.5")
+        layout.addWidget(self.effects_beat_threshold_value, 3, 2)
+        self.effects_beat_threshold_slider.valueChanged.connect(
+            lambda v: self.effects_beat_threshold_value.setText(f"{v/100:.1f}"))
+
+        # Random generation
+        layout.addWidget(QLabel("Random Effects:"), 4, 0)
+        self.effects_random_check = QCheckBox()
+        self.effects_random_check.setChecked(True)
+        layout.addWidget(self.effects_random_check, 4, 1)
+
+        # Random chance
+        layout.addWidget(QLabel("Random Rate:"), 5, 0)
+        self.effects_random_slider = QSlider(Qt.Horizontal)
+        self.effects_random_slider.setRange(1, 20)
+        self.effects_random_slider.setValue(10)
+        layout.addWidget(self.effects_random_slider, 5, 1)
+        self.effects_random_value = QLabel("0.01")
+        layout.addWidget(self.effects_random_value, 5, 2)
+        self.effects_random_slider.valueChanged.connect(
+            lambda v: self.effects_random_value.setText(f"{v/1000:.3f}"))
+
+        group.setLayout(layout)
+        return group
+
+    def _create_effect_types_controls(self):
+        """Create controls for enabling/disabling specific effect types"""
+        group = QGroupBox("Effect Types")
+        layout = QGridLayout()
+
+        # Sparks
+        layout.addWidget(QLabel("Sparks:"), 0, 0)
+        self.effect_spark_check = QCheckBox()
+        self.effect_spark_check.setChecked(True)
+        layout.addWidget(self.effect_spark_check, 0, 1)
+
+        self.effect_spark_weight_slider = QSlider(Qt.Horizontal)
+        self.effect_spark_weight_slider.setRange(0, 100)
+        self.effect_spark_weight_slider.setValue(40)
+        layout.addWidget(self.effect_spark_weight_slider, 0, 2)
+
+        self.effect_spark_weight_value = QLabel("40")
+        layout.addWidget(self.effect_spark_weight_value, 0, 3)
+        self.effect_spark_weight_slider.valueChanged.connect(
+            lambda v: self.effect_spark_weight_value.setText(str(v)))
+
+        # Flares
+        layout.addWidget(QLabel("Flares:"), 1, 0)
+        self.effect_flare_check = QCheckBox()
+        self.effect_flare_check.setChecked(True)
+        layout.addWidget(self.effect_flare_check, 1, 1)
+
+        self.effect_flare_weight_slider = QSlider(Qt.Horizontal)
+        self.effect_flare_weight_slider.setRange(0, 100)
+        self.effect_flare_weight_slider.setValue(30)
+        layout.addWidget(self.effect_flare_weight_slider, 1, 2)
+
+        self.effect_flare_weight_value = QLabel("30")
+        layout.addWidget(self.effect_flare_weight_value, 1, 3)
+        self.effect_flare_weight_slider.valueChanged.connect(
+            lambda v: self.effect_flare_weight_value.setText(str(v)))
+
+        # Fireworks
+        layout.addWidget(QLabel("Fireworks:"), 2, 0)
+        self.effect_firework_check = QCheckBox()
+        self.effect_firework_check.setChecked(True)
+        layout.addWidget(self.effect_firework_check, 2, 1)
+
+        self.effect_firework_weight_slider = QSlider(Qt.Horizontal)
+        self.effect_firework_weight_slider.setRange(0, 100)
+        self.effect_firework_weight_slider.setValue(15)
+        layout.addWidget(self.effect_firework_weight_slider, 2, 2)
+
+        self.effect_firework_weight_value = QLabel("15")
+        layout.addWidget(self.effect_firework_weight_value, 2, 3)
+        self.effect_firework_weight_slider.valueChanged.connect(
+            lambda v: self.effect_firework_weight_value.setText(str(v)))
+
+        # Mist
+        layout.addWidget(QLabel("Mist:"), 3, 0)
+        self.effect_mist_check = QCheckBox()
+        self.effect_mist_check.setChecked(True)
+        layout.addWidget(self.effect_mist_check, 3, 1)
+
+        self.effect_mist_weight_slider = QSlider(Qt.Horizontal)
+        self.effect_mist_weight_slider.setRange(0, 100)
+        self.effect_mist_weight_slider.setValue(15)
+        layout.addWidget(self.effect_mist_weight_slider, 3, 2)
+
+        self.effect_mist_weight_value = QLabel("15")
+        layout.addWidget(self.effect_mist_weight_value, 3, 3)
+        self.effect_mist_weight_slider.valueChanged.connect(
+            lambda v: self.effect_mist_weight_value.setText(str(v)))
+
+        group.setLayout(layout)
+        return group
+
+    def _create_effects_reactivity_controls(self):
+        """Create controls for effect audio reactivity"""
+        group = QGroupBox("Effects Reactivity")
+        layout = QGridLayout()
+
+        # Bass reactivity
+        layout.addWidget(QLabel("Bass:"), 0, 0)
+        self.effects_bass_slider = QSlider(Qt.Horizontal)
+        self.effects_bass_slider.setRange(0, 200)
+        self.effects_bass_slider.setValue(100)
+        layout.addWidget(self.effects_bass_slider, 0, 1)
+        self.effects_bass_value = QLabel("1.0")
+        layout.addWidget(self.effects_bass_value, 0, 2)
+        self.effects_bass_slider.valueChanged.connect(
+            lambda v: self.effects_bass_value.setText(f"{v/100:.1f}"))
+
+        # Mids reactivity
+        layout.addWidget(QLabel("Mids:"), 1, 0)
+        self.effects_mids_slider = QSlider(Qt.Horizontal)
+        self.effects_mids_slider.setRange(0, 200)
+        self.effects_mids_slider.setValue(70)
+        layout.addWidget(self.effects_mids_slider, 1, 1)
+        self.effects_mids_value = QLabel("0.7")
+        layout.addWidget(self.effects_mids_value, 1, 2)
+        self.effects_mids_slider.valueChanged.connect(
+            lambda v: self.effects_mids_value.setText(f"{v/100:.1f}"))
+
+        # Highs reactivity
+        layout.addWidget(QLabel("Highs:"), 2, 0)
+        self.effects_highs_slider = QSlider(Qt.Horizontal)
+        self.effects_highs_slider.setRange(0, 200)
+        self.effects_highs_slider.setValue(50)
+        layout.addWidget(self.effects_highs_slider, 2, 1)
+        self.effects_highs_value = QLabel("0.5")
+        layout.addWidget(self.effects_highs_value, 2, 2)
+        self.effects_highs_slider.valueChanged.connect(
+            lambda v: self.effects_highs_value.setText(f"{v/100:.1f}"))
+
+        # Volume reactivity
+        layout.addWidget(QLabel("Volume:"), 3, 0)
+        self.effects_volume_slider = QSlider(Qt.Horizontal)
+        self.effects_volume_slider.setRange(0, 200)
+        self.effects_volume_slider.setValue(80)
+        layout.addWidget(self.effects_volume_slider, 3, 1)
+        self.effects_volume_value = QLabel("0.8")
+        layout.addWidget(self.effects_volume_value, 3, 2)
+        self.effects_volume_slider.valueChanged.connect(
+            lambda v: self.effects_volume_value.setText(f"{v/100:.1f}"))
+
+        group.setLayout(layout)
+        return group

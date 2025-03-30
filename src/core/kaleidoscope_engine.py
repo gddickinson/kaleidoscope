@@ -9,6 +9,7 @@ from src.core.visualization_components import (
     CircularWaveform, WireframeManager
 )
 
+from src.core.particle_effects import EffectsManager
 
 
 # =============================================================================
@@ -97,6 +98,9 @@ class KaleidoscopeEngine(QObject):
         # Store raw audio data for waveform
         self.raw_audio_data = np.zeros(1024)
 
+        # Particle effects system
+        self.effects_manager = EffectsManager(width, height)
+
         # Initialize particles
         self.init_particles()
 
@@ -179,6 +183,10 @@ class KaleidoscopeEngine(QObject):
                 self.bands[0] * self.bass_influence
             )
 
+        # Update effects manager
+        self.effects_manager.update(spectrum, bands, volume, self.is_beat)
+
+
     def detect_beat(self):
         """Simple beat detection based on bass energy"""
         # Get current bass energy
@@ -230,6 +238,7 @@ class KaleidoscopeEngine(QObject):
         if abs(self.current_pulse - 1.0) < 0.05:
             self.current_pulse = 1.0
             self.target_pulse = 1.0
+
 
     def render(self):
         """Render the current state of the kaleidoscope"""
@@ -322,7 +331,6 @@ class KaleidoscopeEngine(QObject):
             }
         )
 
-
         # Render circular waveform if enabled
         if self.enable_waveform:
             self.circular_waveform.render(
@@ -331,17 +339,21 @@ class KaleidoscopeEngine(QObject):
                 self.center_y
             )
 
+        # Render particle effects - MOVED BEFORE the end of painter
+        if hasattr(self, 'effects_manager') and self.effects_manager:
+            try:
+                self.effects_manager.render(final_painter)
+            except Exception as e:
+                print(f"Error rendering effects: {e}")
 
         # Render wireframe shapes if enabled
         if self.enable_wireframe:
             self.wireframe_manager.render(
                 final_painter,
-                self.center_x,  # Make sure center_x is properly defined
-                self.center_y,  # Make sure center_y is properly defined
+                self.center_x,
+                self.center_y,
                 self.perspective
             )
-
-        final_painter.end()
 
         # End painter after all rendering is done
         final_painter.end()
@@ -401,6 +413,10 @@ class KaleidoscopeEngine(QObject):
         if hasattr(self, 'wireframe_manager'):
             # Update size based on new dimensions
             self.wireframe_manager.set_size(min(width, height) // 4)
+
+        # Update effects manager
+        if hasattr(self, 'effects_manager'):
+            self.effects_manager.resize(width, height)
 
     # 3D settings
     def set_3d_enabled(self, enabled):
@@ -479,7 +495,20 @@ class KaleidoscopeEngine(QObject):
         try:
             # Debug output
             print(f"Setting wireframe shape to: {shape_type}, morph={morph}")
+
+            # Convert shape type to lowercase for case-insensitive matching
+            shape_type = shape_type.lower().strip()
+
+            # Check if shape type is valid
+            valid_shapes = ["cube", "pyramid", "sphere", "octahedron",
+                            "dodecahedron", "tetrahedron", "torus"]
+
+            if shape_type not in valid_shapes:
+                print(f"Invalid shape type: {shape_type}. Using cube instead.")
+                shape_type = "cube"
+
             self.wireframe_manager.set_shape(shape_type, morph)
+
         except Exception as e:
             print(f"Error setting wireframe shape: {e}")
             import traceback
@@ -551,3 +580,31 @@ class KaleidoscopeEngine(QObject):
             self.wireframe_manager.set_edges_visible(visible)
         except Exception as e:
             print(f"Error setting wireframe edges visibility: {e}")
+
+    def set_effects_enabled(self, enabled):
+        """Enable or disable particle effects"""
+        self.effects_manager.set_enabled(enabled)
+
+    def set_effects_intensity(self, intensity):
+        """Set overall effect intensity"""
+        self.effects_manager.set_intensity(intensity)
+
+    def set_effect_type_enabled(self, effect_type, enabled):
+        """Enable or disable specific effect type"""
+        self.effects_manager.set_effect_enabled(effect_type, enabled)
+
+    def set_effects_beat_response(self, enabled, threshold):
+        """Set effects beat response parameters"""
+        self.effects_manager.set_beat_response(enabled, threshold)
+
+    def set_effects_random_generation(self, enabled, chance):
+        """Set effects random generation parameters"""
+        self.effects_manager.set_random_generation(enabled, chance)
+
+    def set_effects_weights(self, weights):
+        """Set effect type weights"""
+        self.effects_manager.set_effect_weights(weights)
+
+    def set_effects_audio_reactivity(self, bass, mids, highs, volume):
+        """Set effects audio reactivity parameters"""
+        self.effects_manager.set_audio_reactivity(bass, mids, highs, volume)
