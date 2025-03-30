@@ -476,11 +476,21 @@ class KaleidoscopeEngine(QObject):
 
     def set_wireframe_shape(self, shape_type, morph=False):
         """Set the wireframe shape type"""
-        self.wireframe_manager.set_shape(shape_type, morph)
+        try:
+            # Debug output
+            print(f"Setting wireframe shape to: {shape_type}, morph={morph}")
+            self.wireframe_manager.set_shape(shape_type, morph)
+        except Exception as e:
+            print(f"Error setting wireframe shape: {e}")
+            import traceback
+            traceback.print_exc()
 
     def set_wireframe_size(self, size):
         """Set the wireframe shape size"""
-        self.wireframe_manager.set_size(size)
+        try:
+            self.wireframe_manager.set_size(size)
+        except Exception as e:
+            print(f"Error setting wireframe size: {e}")
 
     def set_wireframe_rotation(self, speed):
         """Set wireframe rotation speed"""

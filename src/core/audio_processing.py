@@ -8,7 +8,8 @@ from PyQt5.QtCore import QThread, pyqtSignal
 
 class AudioProcessor(QThread):
     """Thread for capturing and processing audio input"""
-    audio_data = pyqtSignal(np.ndarray, np.ndarray, float)
+    # Update the signal definition to include raw audio data
+    audio_data = pyqtSignal(np.ndarray, np.ndarray, float, np.ndarray)
 
     def __init__(self):
         super().__init__()
@@ -47,7 +48,6 @@ class AudioProcessor(QThread):
                 if len(data) > 0:
                     self.last_raw_audio = data / 32768.0  # Normalize to [-1, 1] range
 
-
                 # Calculate volume/amplitude (RMS)
                 # Avoid NaN by ensuring there's valid data
                 if len(data) > 0 and np.any(data):
@@ -85,11 +85,8 @@ class AudioProcessor(QThread):
                     bands = np.nan_to_num(np.array([bass, mids, highs]))
                     volume = 0.0 if np.isnan(self.rms_volume) else self.rms_volume
 
-                    self.audio_data.emit(spectrum, bands, volume)
-
-                    # Emit signal with raw audio data added
+                    # Emit signal with raw audio data
                     self.audio_data.emit(spectrum, bands, volume, self.last_raw_audio)
-
             except Exception as e:
                 print(f"Audio processing error: {e}")
                 import traceback

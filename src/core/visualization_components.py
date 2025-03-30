@@ -794,6 +794,10 @@ class WireframeShapeFactory:
     @staticmethod
     def create_shape(shape_type, size=100):
         """Create a wireframe shape based on the specified type"""
+        # Convert to lowercase for case-insensitive matching
+        shape_type = shape_type.lower()
+
+        # Map of shape types to classes
         shape_map = {
             "cube": WireframeCube,
             "pyramid": WireframePyramid,
@@ -804,10 +808,14 @@ class WireframeShapeFactory:
             "torus": WireframeTorus
         }
 
+        # Debug output
+        print(f"Creating shape of type: {shape_type}")
+
         if shape_type in shape_map:
             return shape_map[shape_type](size)
         else:
-            # Default to cube if shape type is not recognized
+            # If not found, log the error and default to cube
+            print(f"Shape type '{shape_type}' not found. Available types: {list(shape_map.keys())}")
             return WireframeCube(size)
 
 

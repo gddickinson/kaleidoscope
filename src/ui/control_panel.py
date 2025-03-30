@@ -536,25 +536,32 @@ class ControlPanel(QWidget):
         )
 
 
-        # Apply wireframe settings
+        # Apply wireframe settings with better error handling and debug output
         try:
-            # Basic wireframe settings
+            # Check if wireframe controls exist
             if hasattr(self, 'enable_wireframe_check'):
                 # Enable/disable wireframe
                 engine.set_wireframe_enabled(self.enable_wireframe_check.isChecked())
 
-                # Set wireframe shape with morphing option
+                # Get shape type from combo box, ensuring lowercase
                 shape_type = self.wireframe_shape_combo.currentText().lower()
+                print(f"Selected shape type: {shape_type}")
+
+                # Get morph option
                 morph_enabled = self.wireframe_morph_check.isChecked()
+
+                # Set shape with proper morph option
                 engine.set_wireframe_shape(shape_type, morph_enabled)
 
                 # Set size and rotation
                 size = self.wireframe_size_slider.value()
                 rotation_speed = self.wireframe_rotation_slider.value() / 100.0
+
+                # Apply size and rotation
                 engine.set_wireframe_size(size)
                 engine.set_wireframe_rotation(rotation_speed)
 
-                # Set color mode
+                # Set color mode (with proper string conversion)
                 color_mode = self.wireframe_color_combo.currentText().lower().replace(" ", "_")
                 engine.set_wireframe_color_mode(color_mode)
 

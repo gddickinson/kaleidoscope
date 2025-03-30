@@ -139,7 +139,7 @@ class MainWindow(QMainWindow):
         else:
             self.debug_console.log("Exited fullscreen mode")
 
-    def process_audio(self, spectrum, bands, volume, raw_audio=None):
+    def process_audio(self, spectrum, bands, volume, raw_audio):
         """Process audio data from audio processor"""
         # Update visualizations with raw audio data
         self.visualization.process_audio(spectrum, bands, volume, raw_audio)
