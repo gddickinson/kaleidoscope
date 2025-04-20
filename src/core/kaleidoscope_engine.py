@@ -10,7 +10,7 @@ from src.core.visualization_components import (
 )
 
 from src.core.particle_effects import EffectsManager
-
+from src.experimental.experimental_manager import ExperimentalEffectsManager
 
 # =============================================================================
 # Core Module: Kaleidoscope Engine
@@ -104,6 +104,9 @@ class KaleidoscopeEngine(QObject):
         # Initialize particles
         self.init_particles()
 
+        # Initialize experimental effects
+        self.experimental_effects = ExperimentalEffectsManager(width, height)
+
     def init_particles(self):
         """Initialize particles for animation"""
         self.particles = []
@@ -186,6 +189,9 @@ class KaleidoscopeEngine(QObject):
         # Update effects manager
         self.effects_manager.update(spectrum, bands, volume, self.is_beat)
 
+        # Update experimental effects
+        if hasattr(self, 'experimental_effects'):
+            self.experimental_effects.update(spectrum, bands, volume, self.is_beat)
 
     def detect_beat(self):
         """Simple beat detection based on bass energy"""
@@ -355,6 +361,16 @@ class KaleidoscopeEngine(QObject):
                 self.perspective
             )
 
+        # Render experimental effects
+        if hasattr(self, 'experimental_effects'):
+            try:
+                self.experimental_effects.render(final_painter)
+            except Exception as e:
+                print(f"Error rendering experimental effects: {e}")
+                import traceback
+                traceback.print_exc()
+
+
         # End painter after all rendering is done
         final_painter.end()
 
@@ -417,6 +433,9 @@ class KaleidoscopeEngine(QObject):
         # Update effects manager
         if hasattr(self, 'effects_manager'):
             self.effects_manager.resize(width, height)
+
+        if hasattr(self, 'experimental_effects'):
+            self.experimental_effects.resize(width, height)
 
     # 3D settings
     def set_3d_enabled(self, enabled):

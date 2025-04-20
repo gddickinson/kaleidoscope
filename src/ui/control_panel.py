@@ -43,6 +43,11 @@ class ControlPanel(QWidget):
         effects_layout = QVBoxLayout()
         effects_tab.setLayout(effects_layout)
 
+        # Tab for experimental effects
+        experimental_tab = QWidget()
+        experimental_layout = QVBoxLayout()
+        experimental_tab.setLayout(experimental_layout)
+
         # Add control groups to Visual tab
         visual_layout.addWidget(self._create_general_controls())
         visual_layout.addWidget(self._create_visual_controls())
@@ -54,6 +59,15 @@ class ControlPanel(QWidget):
         technical_layout.addWidget(self._create_pulse_controls())
         technical_layout.addWidget(self._create_audio_controls())
         technical_layout.addStretch(1)
+
+        # Add control groups to Experimental tab
+        experimental_layout.addWidget(self._create_dimensional_controls())
+        experimental_layout.addWidget(self._create_liquid_metal_controls())
+        experimental_layout.addWidget(self._create_mycelia_controls())
+        experimental_layout.addWidget(self._create_gravitational_lens_controls())
+        experimental_layout.addWidget(self._create_global_experimental_controls())
+        experimental_layout.addStretch(1)
+
 
         # Add control groups to Visualizations tab
         vis_layout.addWidget(self._create_waveform_controls())
@@ -78,6 +92,8 @@ class ControlPanel(QWidget):
         self.tab_widget.addTab(vis_tab, "Visualizations")
         self.tab_widget.addTab(wireframe_tab, "Wireframe Shapes")
         self.tab_widget.addTab(effects_tab, "Particle Effects")
+
+        self.tab_widget.addTab(experimental_tab, "Experimental Effects")
 
         # Add tab widget to main layout
         main_layout.addWidget(self.tab_widget)
@@ -538,6 +554,42 @@ class ControlPanel(QWidget):
             self.tunnel_direction_combo.setCurrentIndex(0)  # Auto
 
 
+        # Reset experimental effects
+        if hasattr(self, 'experimental_opacity_slider'):
+            self.experimental_opacity_slider.setValue(80)
+
+            # Reset Dimensional Portal
+            self.dimensional_enable_check.setChecked(False)
+            self.dimensional_intensity_slider.setValue(80)
+            self.dimensional_inner_color_btn.setStyleSheet("background-color: #140028")
+            self.dimensional_outer_color_btn.setStyleSheet("background-color: #6400FF")
+            self.dimensional_glow_color_btn.setStyleSheet("background-color: #B478FF")
+
+            # Reset Liquid Metal
+            self.liquid_metal_enable_check.setChecked(False)
+            self.liquid_metal_intensity_slider.setValue(80)
+            self.liquid_metal_color_btn.setStyleSheet("background-color: #C8C8DC")
+            self.liquid_highlight_color_btn.setStyleSheet("background-color: #FFFFFF")
+            self.liquid_shadow_color_btn.setStyleSheet("background-color: #464664")
+
+            # Reset Audio Mycelia
+            self.mycelia_enable_check.setChecked(False)
+            self.mycelia_intensity_slider.setValue(80)
+            self.mycelia_growth_slider.setValue(150)
+            self.mycelia_base_color_btn.setStyleSheet("background-color: #50DC78")
+            self.mycelia_tip_color_btn.setStyleSheet("background-color: #DCFFC8")
+            self.mycelia_bg_color_btn.setStyleSheet("background-color: #0A140A")
+            self.mycelia_bg_opacity_slider.setValue(100)
+
+            # Reset Gravitational Lens
+            self.lens_enable_check.setChecked(False)
+            self.lens_intensity_slider.setValue(80)
+            self.lens_distortion_slider.setValue(100)
+            self.lens_grid_color_btn.setStyleSheet("background-color: #323250")
+            self.lens_center_color_btn.setStyleSheet("background-color: #6496FF")
+            self.lens_edge_color_btn.setStyleSheet("background-color: #3264C8")
+            self.lens_grid_check.setChecked(True)
+
     def apply_to_engine(self, engine, audio_processor):
         """Apply all settings to the engine and audio processor"""
         if not engine or not audio_processor:
@@ -768,6 +820,155 @@ class ControlPanel(QWidget):
             print(f"Error applying particle effects settings: {e}")
             import traceback
             traceback.print_exc()
+
+
+        # Apply experimental effects settings
+        try:
+            if hasattr(self, 'dimensional_enable_check') and hasattr(engine, 'experimental_effects'):
+                # Dimensional Portal
+                engine.experimental_effects.set_effect_enabled(
+                    'dimensional_portal',
+                    self.dimensional_enable_check.isChecked()
+                )
+                engine.experimental_effects.set_effect_intensity(
+                    'dimensional_portal',
+                    self.dimensional_intensity_slider.value() / 100.0
+                )
+
+                # Liquid Metal
+                engine.experimental_effects.set_effect_enabled(
+                    'liquid_metal',
+                    self.liquid_metal_enable_check.isChecked()
+                )
+                engine.experimental_effects.set_effect_intensity(
+                    'liquid_metal',
+                    self.liquid_metal_intensity_slider.value() / 100.0
+                )
+
+                # Audio Mycelia
+                engine.experimental_effects.set_effect_enabled(
+                    'audio_mycelia',
+                    self.mycelia_enable_check.isChecked()
+                )
+                engine.experimental_effects.set_effect_intensity(
+                    'audio_mycelia',
+                    self.mycelia_intensity_slider.value() / 100.0
+                )
+
+                # Check if the effect has additional settings
+                if hasattr(engine.experimental_effects.effects['audio_mycelia'], 'set_growth_rate'):
+                    growth_rate = self.mycelia_growth_slider.value() / 100.0
+                    engine.experimental_effects.effects['audio_mycelia'].set_growth_rate(growth_rate)
+
+                # Gravitational Lens
+                engine.experimental_effects.set_effect_enabled(
+                    'gravitational_lens',
+                    self.lens_enable_check.isChecked()
+                )
+                engine.experimental_effects.set_effect_intensity(
+                    'gravitational_lens',
+                    self.lens_intensity_slider.value() / 100.0
+                )
+
+                # Check if the effect has additional settings
+                if hasattr(engine.experimental_effects.effects['gravitational_lens'], 'set_distortion_strength'):
+                    distortion = self.lens_distortion_slider.value() / 100.0
+                    engine.experimental_effects.effects['gravitational_lens'].set_distortion_strength(distortion)
+
+                if hasattr(engine.experimental_effects.effects['gravitational_lens'], 'set_grid_visible'):
+                    engine.experimental_effects.effects['gravitational_lens'].set_grid_visible(
+                        self.lens_grid_check.isChecked()
+                    )
+        except Exception as e:
+            print(f"Error applying experimental effects settings: {e}")
+            import traceback
+            traceback.print_exc()
+
+
+        # Apply global opacity
+        if hasattr(self, 'experimental_opacity_slider') and hasattr(engine, 'experimental_effects'):
+            opacity = self.experimental_opacity_slider.value() / 100.0
+            engine.experimental_effects.set_global_opacity(opacity)
+
+        # Dimensional Portal colors
+        if hasattr(self, 'dimensional_inner_color_btn') and hasattr(engine, 'experimental_effects'):
+            inner_color = QColor()
+            inner_color.setNamedColor(self.dimensional_inner_color_btn.styleSheet().split(":")[1].strip())
+            engine.experimental_effects.effects['dimensional_portal'].set_inner_color(inner_color)
+
+            outer_color = QColor()
+            outer_color.setNamedColor(self.dimensional_outer_color_btn.styleSheet().split(":")[1].strip())
+            engine.experimental_effects.effects['dimensional_portal'].set_outer_color(outer_color)
+
+            glow_color = QColor()
+            glow_color.setNamedColor(self.dimensional_glow_color_btn.styleSheet().split(":")[1].strip())
+            engine.experimental_effects.effects['dimensional_portal'].set_glow_color(glow_color)
+
+        # Dimensional Portal reactivity
+        if hasattr(self, 'dimensional_reactive_inner_check') and hasattr(engine.experimental_effects.effects['dimensional_portal'], 'enable_color_reactivity'):
+            engine.experimental_effects.effects['dimensional_portal'].enable_color_reactivity(
+                enable_inner=self.dimensional_reactive_inner_check.isChecked(),
+                enable_outer=self.dimensional_reactive_outer_check.isChecked(),
+                enable_glow=self.dimensional_reactive_glow_check.isChecked()
+            )
+
+        # Liquid Metal colors
+        if hasattr(self, 'liquid_metal_color_btn') and hasattr(engine, 'experimental_effects'):
+            metal_color = QColor()
+            metal_color.setNamedColor(self.liquid_metal_color_btn.styleSheet().split(":")[1].strip())
+            engine.experimental_effects.effects['liquid_metal'].set_metal_color(metal_color)
+
+            highlight_color = QColor()
+            highlight_color.setNamedColor(self.liquid_highlight_color_btn.styleSheet().split(":")[1].strip())
+            engine.experimental_effects.effects['liquid_metal'].set_highlight_color(highlight_color)
+
+            shadow_color = QColor()
+            shadow_color.setNamedColor(self.liquid_shadow_color_btn.styleSheet().split(":")[1].strip())
+            engine.experimental_effects.effects['liquid_metal'].set_shadow_color(shadow_color)
+
+        # Audio Mycelia colors
+        if hasattr(self, 'mycelia_base_color_btn') and hasattr(engine, 'experimental_effects'):
+            base_color = QColor()
+            base_color.setNamedColor(self.mycelia_base_color_btn.styleSheet().split(":")[1].strip())
+            engine.experimental_effects.effects['audio_mycelia'].set_base_color(base_color)
+
+            tip_color = QColor()
+            tip_color.setNamedColor(self.mycelia_tip_color_btn.styleSheet().split(":")[1].strip())
+            engine.experimental_effects.effects['audio_mycelia'].set_tip_color(tip_color)
+
+            bg_color = QColor()
+            bg_color.setNamedColor(self.mycelia_bg_color_btn.styleSheet().split(":")[1].strip())
+            alpha = self.mycelia_bg_opacity_slider.value()
+            engine.experimental_effects.effects['audio_mycelia'].set_bg_color(bg_color, alpha)
+
+            # Apply growth rate if available
+            if hasattr(engine.experimental_effects.effects['audio_mycelia'], 'set_growth_rate'):
+                growth_rate = self.mycelia_growth_slider.value() / 100.0
+                engine.experimental_effects.effects['audio_mycelia'].set_growth_rate(growth_rate)
+
+        # Gravitational Lens colors
+        if hasattr(self, 'lens_grid_color_btn') and hasattr(engine, 'experimental_effects'):
+            grid_color = QColor()
+            grid_color.setNamedColor(self.lens_grid_color_btn.styleSheet().split(":")[1].strip())
+            engine.experimental_effects.effects['gravitational_lens'].set_grid_color(grid_color, 100)
+
+            lens_color = QColor()
+            lens_color.setNamedColor(self.lens_center_color_btn.styleSheet().split(":")[1].strip())
+            engine.experimental_effects.effects['gravitational_lens'].set_lens_color(lens_color)
+
+            edge_color = QColor()
+            edge_color.setNamedColor(self.lens_edge_color_btn.styleSheet().split(":")[1].strip())
+            engine.experimental_effects.effects['gravitational_lens'].set_edge_color(edge_color)
+
+            # Apply distortion and grid visibility if available
+            if hasattr(engine.experimental_effects.effects['gravitational_lens'], 'set_distortion_strength'):
+                distortion = self.lens_distortion_slider.value() / 100.0
+                engine.experimental_effects.effects['gravitational_lens'].set_distortion_strength(distortion)
+
+            if hasattr(engine.experimental_effects.effects['gravitational_lens'], 'set_grid_visible'):
+                engine.experimental_effects.effects['gravitational_lens'].set_grid_visible(
+                    self.lens_grid_check.isChecked()
+                )
 
     def _create_wireframe_controls(self):
         """Create controls for enhanced wireframe effects"""
@@ -1298,6 +1499,333 @@ class ControlPanel(QWidget):
         self.tunnel_direction_combo = QComboBox()
         self.tunnel_direction_combo.addItems(["Auto", "Inward", "Outward"])
         layout.addWidget(self.tunnel_direction_combo, 3, 1, 1, 2)
+
+        group.setLayout(layout)
+        return group
+
+    def _create_dimensional_controls(self):
+        """Create controls for dimensional portal effect"""
+        group = QGroupBox("Dimensional Portal")
+        layout = QGridLayout()
+
+        # Enable effect
+        layout.addWidget(QLabel("Enable:"), 0, 0)
+        self.dimensional_enable_check = QCheckBox()
+        self.dimensional_enable_check.setChecked(False)
+        layout.addWidget(self.dimensional_enable_check, 0, 1)
+
+        # Intensity
+        layout.addWidget(QLabel("Intensity:"), 1, 0)
+        self.dimensional_intensity_slider = QSlider(Qt.Horizontal)
+        self.dimensional_intensity_slider.setRange(1, 100)
+        self.dimensional_intensity_slider.setValue(80)
+        layout.addWidget(self.dimensional_intensity_slider, 1, 1)
+        self.dimensional_intensity_value = QLabel("0.8")
+        layout.addWidget(self.dimensional_intensity_value, 1, 2)
+        self.dimensional_intensity_slider.valueChanged.connect(
+            lambda v: self.dimensional_intensity_value.setText(f"{v/100:.1f}"))
+
+        # Inner color
+        layout.addWidget(QLabel("Inner Color:"), 2, 0)
+        self.dimensional_inner_color_btn = QPushButton()
+        self.dimensional_inner_color_btn.setStyleSheet("background-color: #140028")  # Dark purple
+        self.dimensional_inner_color_btn.clicked.connect(self._select_dimensional_inner_color)
+        layout.addWidget(self.dimensional_inner_color_btn, 2, 1, 1, 2)
+
+        # Outer color
+        layout.addWidget(QLabel("Outer Color:"), 3, 0)
+        self.dimensional_outer_color_btn = QPushButton()
+        self.dimensional_outer_color_btn.setStyleSheet("background-color: #6400FF")  # Purple
+        self.dimensional_outer_color_btn.clicked.connect(self._select_dimensional_outer_color)
+        layout.addWidget(self.dimensional_outer_color_btn, 3, 1, 1, 2)
+
+        # Glow color
+        layout.addWidget(QLabel("Glow Color:"), 4, 0)
+        self.dimensional_glow_color_btn = QPushButton()
+        self.dimensional_glow_color_btn.setStyleSheet("background-color: #B478FF")  # Light purple
+        self.dimensional_glow_color_btn.clicked.connect(self._select_dimensional_glow_color)
+        layout.addWidget(self.dimensional_glow_color_btn, 4, 1, 1, 2)
+
+        layout.addWidget(QLabel("Reactive Colors:"), 5, 0)
+        self.dimensional_reactive_inner_check = QCheckBox("Inner")
+        self.dimensional_reactive_outer_check = QCheckBox("Outer")
+        self.dimensional_reactive_glow_check = QCheckBox("Glow")
+        reactive_layout = QHBoxLayout()
+        reactive_layout.addWidget(self.dimensional_reactive_inner_check)
+        reactive_layout.addWidget(self.dimensional_reactive_outer_check)
+        reactive_layout.addWidget(self.dimensional_reactive_glow_check)
+        layout.addLayout(reactive_layout, 5, 1, 1, 2)
+
+        group.setLayout(layout)
+        return group
+
+    def _select_dimensional_inner_color(self):
+        """Open color dialog for dimensional portal inner color"""
+        color = QColorDialog.getColor(QColor(20, 0, 40), self, "Select Inner Color")
+        if color.isValid():
+            self.dimensional_inner_color_btn.setStyleSheet(f"background-color: {color.name()}")
+
+    def _select_dimensional_outer_color(self):
+        """Open color dialog for dimensional portal outer color"""
+        color = QColorDialog.getColor(QColor(100, 0, 255), self, "Select Outer Color")
+        if color.isValid():
+            self.dimensional_outer_color_btn.setStyleSheet(f"background-color: {color.name()}")
+
+    def _select_dimensional_glow_color(self):
+        """Open color dialog for dimensional portal glow color"""
+        color = QColorDialog.getColor(QColor(180, 120, 255), self, "Select Glow Color")
+        if color.isValid():
+            self.dimensional_glow_color_btn.setStyleSheet(f"background-color: {color.name()}")
+
+
+    def _create_liquid_metal_controls(self):
+        """Create controls for liquid metal effect"""
+        group = QGroupBox("Liquid Metal")
+        layout = QGridLayout()
+
+        # Enable effect
+        layout.addWidget(QLabel("Enable:"), 0, 0)
+        self.liquid_metal_enable_check = QCheckBox()
+        self.liquid_metal_enable_check.setChecked(False)
+        layout.addWidget(self.liquid_metal_enable_check, 0, 1)
+
+        # Intensity
+        layout.addWidget(QLabel("Intensity:"), 1, 0)
+        self.liquid_metal_intensity_slider = QSlider(Qt.Horizontal)
+        self.liquid_metal_intensity_slider.setRange(1, 100)
+        self.liquid_metal_intensity_slider.setValue(80)
+        layout.addWidget(self.liquid_metal_intensity_slider, 1, 1)
+        self.liquid_metal_intensity_value = QLabel("0.8")
+        layout.addWidget(self.liquid_metal_intensity_value, 1, 2)
+        self.liquid_metal_intensity_slider.valueChanged.connect(
+            lambda v: self.liquid_metal_intensity_value.setText(f"{v/100:.1f}"))
+
+        # Metal color
+        layout.addWidget(QLabel("Metal Color:"), 2, 0)
+        self.liquid_metal_color_btn = QPushButton()
+        self.liquid_metal_color_btn.setStyleSheet("background-color: #C8C8DC")  # Silver
+        self.liquid_metal_color_btn.clicked.connect(self._select_liquid_metal_color)
+        layout.addWidget(self.liquid_metal_color_btn, 2, 1, 1, 2)
+
+        # Highlight color
+        layout.addWidget(QLabel("Highlight:"), 3, 0)
+        self.liquid_highlight_color_btn = QPushButton()
+        self.liquid_highlight_color_btn.setStyleSheet("background-color: #FFFFFF")  # White
+        self.liquid_highlight_color_btn.clicked.connect(self._select_liquid_highlight_color)
+        layout.addWidget(self.liquid_highlight_color_btn, 3, 1, 1, 2)
+
+        # Shadow color
+        layout.addWidget(QLabel("Shadow:"), 4, 0)
+        self.liquid_shadow_color_btn = QPushButton()
+        self.liquid_shadow_color_btn.setStyleSheet("background-color: #464664")  # Dark blue-gray
+        self.liquid_shadow_color_btn.clicked.connect(self._select_liquid_shadow_color)
+        layout.addWidget(self.liquid_shadow_color_btn, 4, 1, 1, 2)
+
+        group.setLayout(layout)
+        return group
+
+    def _select_liquid_metal_color(self):
+        """Open color dialog for liquid metal color"""
+        color = QColorDialog.getColor(QColor(200, 200, 220), self, "Select Metal Color")
+        if color.isValid():
+            self.liquid_metal_color_btn.setStyleSheet(f"background-color: {color.name()}")
+
+    def _select_liquid_highlight_color(self):
+        """Open color dialog for liquid metal highlight color"""
+        color = QColorDialog.getColor(QColor(255, 255, 255), self, "Select Highlight Color")
+        if color.isValid():
+            self.liquid_highlight_color_btn.setStyleSheet(f"background-color: {color.name()}")
+
+    def _select_liquid_shadow_color(self):
+        """Open color dialog for liquid metal shadow color"""
+        color = QColorDialog.getColor(QColor(70, 70, 100), self, "Select Shadow Color")
+        if color.isValid():
+            self.liquid_shadow_color_btn.setStyleSheet(f"background-color: {color.name()}")
+
+
+    def _create_mycelia_controls(self):
+        """Create controls for audio mycelia effect"""
+        group = QGroupBox("Audio Mycelia")
+        layout = QGridLayout()
+
+        # Enable effect
+        layout.addWidget(QLabel("Enable:"), 0, 0)
+        self.mycelia_enable_check = QCheckBox()
+        self.mycelia_enable_check.setChecked(False)
+        layout.addWidget(self.mycelia_enable_check, 0, 1)
+
+        # Intensity
+        layout.addWidget(QLabel("Intensity:"), 1, 0)
+        self.mycelia_intensity_slider = QSlider(Qt.Horizontal)
+        self.mycelia_intensity_slider.setRange(1, 100)
+        self.mycelia_intensity_slider.setValue(80)
+        layout.addWidget(self.mycelia_intensity_slider, 1, 1)
+        self.mycelia_intensity_value = QLabel("0.8")
+        layout.addWidget(self.mycelia_intensity_value, 1, 2)
+        self.mycelia_intensity_slider.valueChanged.connect(
+            lambda v: self.mycelia_intensity_value.setText(f"{v/100:.1f}"))
+
+        # Growth rate
+        layout.addWidget(QLabel("Growth Rate:"), 2, 0)
+        self.mycelia_growth_slider = QSlider(Qt.Horizontal)
+        self.mycelia_growth_slider.setRange(50, 300)
+        self.mycelia_growth_slider.setValue(150)
+        layout.addWidget(self.mycelia_growth_slider, 2, 1)
+        self.mycelia_growth_value = QLabel("1.5")
+        layout.addWidget(self.mycelia_growth_value, 2, 2)
+        self.mycelia_growth_slider.valueChanged.connect(
+            lambda v: self.mycelia_growth_value.setText(f"{v/100:.1f}"))
+
+        # Base color
+        layout.addWidget(QLabel("Base Color:"), 3, 0)
+        self.mycelia_base_color_btn = QPushButton()
+        self.mycelia_base_color_btn.setStyleSheet("background-color: #50DC78")  # Green
+        self.mycelia_base_color_btn.clicked.connect(self._select_mycelia_base_color)
+        layout.addWidget(self.mycelia_base_color_btn, 3, 1, 1, 2)
+
+        # Tip color
+        layout.addWidget(QLabel("Tip Color:"), 4, 0)
+        self.mycelia_tip_color_btn = QPushButton()
+        self.mycelia_tip_color_btn.setStyleSheet("background-color: #DCFFC8")  # Light green
+        self.mycelia_tip_color_btn.clicked.connect(self._select_mycelia_tip_color)
+        layout.addWidget(self.mycelia_tip_color_btn, 4, 1, 1, 2)
+
+        # Background color
+        layout.addWidget(QLabel("Background:"), 5, 0)
+        self.mycelia_bg_color_btn = QPushButton()
+        self.mycelia_bg_color_btn.setStyleSheet("background-color: #0A140A")  # Dark green
+        self.mycelia_bg_color_btn.clicked.connect(self._select_mycelia_bg_color)
+        layout.addWidget(self.mycelia_bg_color_btn, 5, 1, 1, 2)
+
+        # Background opacity
+        layout.addWidget(QLabel("BG Opacity:"), 6, 0)
+        self.mycelia_bg_opacity_slider = QSlider(Qt.Horizontal)
+        self.mycelia_bg_opacity_slider.setRange(0, 200)
+        self.mycelia_bg_opacity_slider.setValue(100)
+        layout.addWidget(self.mycelia_bg_opacity_slider, 6, 1)
+        self.mycelia_bg_opacity_value = QLabel("100")
+        layout.addWidget(self.mycelia_bg_opacity_value, 6, 2)
+        self.mycelia_bg_opacity_slider.valueChanged.connect(
+            lambda v: self.mycelia_bg_opacity_value.setText(str(v)))
+
+        group.setLayout(layout)
+        return group
+
+    def _select_mycelia_base_color(self):
+        """Open color dialog for mycelia base color"""
+        color = QColorDialog.getColor(QColor(80, 220, 120), self, "Select Base Color")
+        if color.isValid():
+            self.mycelia_base_color_btn.setStyleSheet(f"background-color: {color.name()}")
+
+    def _select_mycelia_tip_color(self):
+        """Open color dialog for mycelia tip color"""
+        color = QColorDialog.getColor(QColor(220, 255, 200), self, "Select Tip Color")
+        if color.isValid():
+            self.mycelia_tip_color_btn.setStyleSheet(f"background-color: {color.name()}")
+
+    def _select_mycelia_bg_color(self):
+        """Open color dialog for mycelia background color"""
+        color = QColorDialog.getColor(QColor(10, 20, 10), self, "Select Background Color")
+        if color.isValid():
+            self.mycelia_bg_color_btn.setStyleSheet(f"background-color: {color.name()}")
+
+
+    def _create_gravitational_lens_controls(self):
+        """Create controls for gravitational lens effect"""
+        group = QGroupBox("Reality Distortion")
+        layout = QGridLayout()
+
+        # Enable effect
+        layout.addWidget(QLabel("Enable:"), 0, 0)
+        self.lens_enable_check = QCheckBox()
+        self.lens_enable_check.setChecked(False)
+        layout.addWidget(self.lens_enable_check, 0, 1)
+
+        # Intensity
+        layout.addWidget(QLabel("Intensity:"), 1, 0)
+        self.lens_intensity_slider = QSlider(Qt.Horizontal)
+        self.lens_intensity_slider.setRange(1, 100)
+        self.lens_intensity_slider.setValue(80)
+        layout.addWidget(self.lens_intensity_slider, 1, 1)
+        self.lens_intensity_value = QLabel("0.8")
+        layout.addWidget(self.lens_intensity_value, 1, 2)
+        self.lens_intensity_slider.valueChanged.connect(
+            lambda v: self.lens_intensity_value.setText(f"{v/100:.1f}"))
+
+        # Distortion strength
+        layout.addWidget(QLabel("Distortion:"), 2, 0)
+        self.lens_distortion_slider = QSlider(Qt.Horizontal)
+        self.lens_distortion_slider.setRange(10, 200)
+        self.lens_distortion_slider.setValue(100)
+        layout.addWidget(self.lens_distortion_slider, 2, 1)
+        self.lens_distortion_value = QLabel("1.0")
+        layout.addWidget(self.lens_distortion_value, 2, 2)
+        self.lens_distortion_slider.valueChanged.connect(
+            lambda v: self.lens_distortion_value.setText(f"{v/100:.1f}"))
+
+        # Grid color
+        layout.addWidget(QLabel("Grid Color:"), 3, 0)
+        self.lens_grid_color_btn = QPushButton()
+        self.lens_grid_color_btn.setStyleSheet("background-color: #323250")  # Blue-gray
+        self.lens_grid_color_btn.clicked.connect(self._select_lens_grid_color)
+        layout.addWidget(self.lens_grid_color_btn, 3, 1, 1, 2)
+
+        # Lens center color
+        layout.addWidget(QLabel("Lens Color:"), 4, 0)
+        self.lens_center_color_btn = QPushButton()
+        self.lens_center_color_btn.setStyleSheet("background-color: #6496FF")  # Blue
+        self.lens_center_color_btn.clicked.connect(self._select_lens_center_color)
+        layout.addWidget(self.lens_center_color_btn, 4, 1, 1, 2)
+
+        # Lens edge color
+        layout.addWidget(QLabel("Edge Color:"), 5, 0)
+        self.lens_edge_color_btn = QPushButton()
+        self.lens_edge_color_btn.setStyleSheet("background-color: #3264C8")  # Darker blue
+        self.lens_edge_color_btn.clicked.connect(self._select_lens_edge_color)
+        layout.addWidget(self.lens_edge_color_btn, 5, 1, 1, 2)
+
+        # Show grid
+        layout.addWidget(QLabel("Show Grid:"), 6, 0)
+        self.lens_grid_check = QCheckBox()
+        self.lens_grid_check.setChecked(True)
+        layout.addWidget(self.lens_grid_check, 6, 1)
+
+        group.setLayout(layout)
+        return group
+
+    def _select_lens_grid_color(self):
+        """Open color dialog for lens grid color"""
+        color = QColorDialog.getColor(QColor(50, 50, 80), self, "Select Grid Color")
+        if color.isValid():
+            self.lens_grid_color_btn.setStyleSheet(f"background-color: {color.name()}")
+
+    def _select_lens_center_color(self):
+        """Open color dialog for lens center color"""
+        color = QColorDialog.getColor(QColor(100, 150, 255), self, "Select Lens Color")
+        if color.isValid():
+            self.lens_center_color_btn.setStyleSheet(f"background-color: {color.name()}")
+
+    def _select_lens_edge_color(self):
+        """Open color dialog for lens edge color"""
+        color = QColorDialog.getColor(QColor(50, 100, 200), self, "Select Edge Color")
+        if color.isValid():
+            self.lens_edge_color_btn.setStyleSheet(f"background-color: {color.name()}")
+
+    def _create_global_experimental_controls(self):
+        """Create global controls for experimental effects"""
+        group = QGroupBox("Global Settings")
+        layout = QGridLayout()
+
+        # Global opacity
+        layout.addWidget(QLabel("Opacity:"), 0, 0)
+        self.experimental_opacity_slider = QSlider(Qt.Horizontal)
+        self.experimental_opacity_slider.setRange(10, 100)
+        self.experimental_opacity_slider.setValue(80)
+        layout.addWidget(self.experimental_opacity_slider, 0, 1)
+        self.experimental_opacity_value = QLabel("80%")
+        layout.addWidget(self.experimental_opacity_value, 0, 2)
+        self.experimental_opacity_slider.valueChanged.connect(
+            lambda v: self.experimental_opacity_value.setText(f"{v}%"))
 
         group.setLayout(layout)
         return group

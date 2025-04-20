@@ -1171,3 +1171,89 @@ class WireframeManager:
         # Update all existing shapes
         for shape in self.shapes:
             shape.show_edges = visible
+
+
+
+class SynestheticColorMapper:
+    """Maps audio frequencies to colors based on synesthetic principles"""
+
+    def __init__(self):
+        # Define frequency ranges and their associated colors
+        self.frequency_color_map = {
+            'bass': [(20, 60, QColor(150, 0, 90)), (60, 120, QColor(200, 0, 80))],
+            'low_mid': [(120, 250, QColor(255, 50, 0)), (250, 500, QColor(255, 120, 0))],
+            'mid': [(500, 1000, QColor(220, 180, 0)), (1000, 2000, QColor(100, 200, 0))],
+            'high_mid': [(2000, 4000, QColor(0, 160, 120)), (4000, 6000, QColor(0, 120, 255))],
+            'high': [(6000, 10000, QColor(100, 0, 255)), (10000, 20000, QColor(200, 150, 255))]
+        }
+
+        # Default palette for when no audio is present
+        self.default_palette = {
+            'primary': QColor(80, 0, 100),
+            'secondary': QColor(0, 80, 100),
+            'accent': QColor(180, 0, 100)
+        }
+
+        # Current color palette (will be updated based on audio)
+        self.current_palette = self.default_palette.copy()
+
+        # Smoothing factor for color transitions
+        self.color_smoothing = 0.2
+
+    def update(self, spectrum, bands, sampling_rate):
+        """Update color palette based on spectrum analysis"""
+        if len(spectrum) == 0:
+            return
+
+        # Create frequency bins from spectrum
+        bin_size = sampling_rate / (len(spectrum) * 2)
+
+        # Find dominant frequencies in each range
+        dominant_colors = []
+
+        for range_type, freq_ranges in self.frequency_color_map.items():
+            for freq_range in freq_ranges:
+                min_freq, max_freq, color = freq_range
+
+                # Convert frequency to bin indices
+                min_bin = int(min_freq / bin_size) if bin_size > 0 else 0
+                max_bin = int(max_freq / bin_size) if bin_size > 0 else len(spectrum) - 1
+
+                # Limit to spectrum length
+                min_bin = min(min_bin, len(spectrum) - 1)
+                max_bin = min(max_bin, len(spectrum) - 1)
+
+                # Get average energy in this frequency range
+                if min_bin <= max_bin:
+                    energy = np.mean(spectrum[min_bin:max_bin+1])
+                    dominant_colors.append((color, energy))
+
+        # Sort by energy (descending)
+        dominant_colors.sort(key=lambda x: x[1], reverse=True)
+
+        # Create new palette from dominant colors
+        if len(dominant_colors) >= 3:
+            new_palette = {
+                'primary': dominant_colors[0][0],
+                'secondary': dominant_colors[1][0],
+                'accent': dominant_colors[2][0]
+            }
+
+            # Apply smoothing to color transitions
+            for key in self.current_palette:
+                current = self.current_palette[key]
+                target = new_palette[key]
+
+                r = int(current.red() * (1 - self.color_smoothing) + target.red() * self.color_smoothing)
+                g = int(current.green() * (1 - self.color_smoothing) + target.green() * self.color_smoothing)
+                b = int(current.blue() * (1 - self.color_smoothing) + target.blue() * self.color_smoothing)
+
+                self.current_palette[key] = QColor(r, g, b)
+
+    def get_palette(self):
+        """Get the current color palette"""
+        return self.current_palette
+
+    def set_smoothing(self, smoothing):
+        """Set the color smoothing factor"""
+        self.color_smoothing = max(0.01, min(0.5, smoothing))
