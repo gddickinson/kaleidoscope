@@ -1,0 +1,4 @@
+# Music-Reactive Kaleidoscope Visualizer - Dependencies
+PyQt5>=5.15.0
+PyAudio>=0.2.13
+numpy>=1.24.0
