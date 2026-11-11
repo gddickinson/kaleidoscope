@@ -5,7 +5,6 @@ desktop app, the web API and the JavaScript port (src/web/static/audio_analysis.
 
 `state` is any object with the attributes `sensitivity`, `smoothing`, `prev_fft`, `fft_data`, `rms_volume`,
 `prev_volume` and `last_raw_audio` (the `AudioProcessor` itself, or an `AnalysisState`).
-
 """
 import numpy as np
 
@@ -45,7 +44,9 @@ def analyze_chunk(state, data):
     # Calculate volume/amplitude (RMS)
     # Avoid NaN by ensuring there's valid data
     if len(data) > 0 and np.any(data):
-        state.rms_volume = np.sqrt(np.mean(data**2)) / 32768.0 * state.sensitivity
+        # Square in float64: int16 samples squared in int16 wrap around for |sample| > 181
+        samples = np.asarray(data, dtype=np.float64)
+        state.rms_volume = np.sqrt(np.mean(samples**2)) / 32768.0 * state.sensitivity
         state.rms_volume = state.prev_volume * state.smoothing + state.rms_volume * (1 - state.smoothing)
         state.prev_volume = state.rms_volume
     else:
