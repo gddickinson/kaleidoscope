@@ -30,7 +30,7 @@ A real-time audio visualization application that creates mesmerizing kaleidoscop
 1. Clone the repository:
    ```
    git clone https://github.com/gddickinson/kaleidoscope.git
-   cd kaleidoscope-visualizer
+   cd kaleidoscope
    ```
 
 2. Create and activate a virtual environment (optional but recommended):
@@ -70,10 +70,9 @@ The application features a tabbed interface with multiple control panels:
 
 ### Keyboard Shortcuts
 
-- **F**: Toggle fullscreen
-- **Esc**: Exit fullscreen mode
-- **R**: Reset to default settings
-- **Space**: Toggle pause/resume
+The desktop app has no keyboard shortcuts: use the Fullscreen check box (Visual Controls, Display Settings) to
+enter and leave fullscreen. (Earlier versions of this README listed F, Esc, R and Space; the code never
+implemented them. The web version below does offer them.)
 
 ## Project Structure
 
