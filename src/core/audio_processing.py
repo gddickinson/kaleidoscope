@@ -2,6 +2,8 @@ import numpy as np
 import pyaudio
 from PyQt5.QtCore import QThread, pyqtSignal
 
+from src.core.audio_analysis import analyze_chunk
+
 # =============================================================================
 # Core Module: Audio Processing
 # =============================================================================
@@ -44,49 +46,12 @@ class AudioProcessor(QThread):
                 # Read audio data
                 data = np.frombuffer(stream.read(self.chunk_size, exception_on_overflow=False), dtype=np.int16)
 
-                # Store normalized raw audio for waveform visualization
-                if len(data) > 0:
-                    self.last_raw_audio = data / 32768.0  # Normalize to [-1, 1] range
-
-                # Calculate volume/amplitude (RMS)
-                # Avoid NaN by ensuring there's valid data
-                if len(data) > 0 and np.any(data):
-                    self.rms_volume = np.sqrt(np.mean(data**2)) / 32768.0 * self.sensitivity
-                    self.rms_volume = self.prev_volume * self.smoothing + self.rms_volume * (1 - self.smoothing)
-                    self.prev_volume = self.rms_volume
-                else:
-                    # Use previous volume if no data is available
-                    self.rms_volume = self.prev_volume
-
-                # Compute FFT
-                if len(data) > 0:
-                    fft = np.abs(np.fft.rfft(data / 32768.0))
-
-                    # Make sure the arrays have the same shape
-                    if len(fft) != len(self.prev_fft):
-                        self.prev_fft = np.zeros_like(fft)
-
-                    self.fft_data = self.prev_fft * self.smoothing + fft * (1 - self.smoothing) * self.sensitivity
-                    self.prev_fft = self.fft_data.copy()  # Use .copy() to avoid reference issues
-
-                    # Replace any NaN values with zeros
-                    self.fft_data = np.nan_to_num(self.fft_data)
-
-                    # Prepare frequency bands (low, mid, high)
-                    bass = np.mean(self.fft_data[1:20])
-                    mids = np.mean(self.fft_data[20:100])
-                    highs = np.mean(self.fft_data[100:])
-
-                    # Calculate spectrum for visualization
-                    spectrum = self.fft_data[1:100]  # Take most relevant frequencies for visualization
-
-                    # Replace any remaining NaN values with zeros
-                    spectrum = np.nan_to_num(spectrum)
-                    bands = np.nan_to_num(np.array([bass, mids, highs]))
-                    volume = 0.0 if np.isnan(self.rms_volume) else self.rms_volume
-
+                # Analyse the chunk (shared with the web app: src/core/audio_analysis.py)
+                result = analyze_chunk(self, data)
+                if result is not None:
+                    spectrum, bands, volume, raw_audio = result
                     # Emit signal with raw audio data
-                    self.audio_data.emit(spectrum, bands, volume, self.last_raw_audio)
+                    self.audio_data.emit(spectrum, bands, volume, raw_audio)
             except Exception as e:
                 print(f"Audio processing error: {e}")
                 import traceback
