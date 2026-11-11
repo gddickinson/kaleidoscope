@@ -1007,7 +1007,7 @@ class WireframeManager:
                 # Set echo color
                 echo_color = QColor(shape.base_color)
                 echo_color.setAlpha(echo_opacity)
-                echo_shape.set_colors(echo_color)
+                echo_shape.set_colors(echo_color, echo_opacity)  # set_colors() sets the alpha
 
                 # Reduce line width for echoes
                 echo_shape.edge_thickness = max(1, shape.edge_thickness - i)
