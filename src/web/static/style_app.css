@@ -1,0 +1,27 @@
+/* Kaleidoscope accents (magenta / cyan / violet) and page styles. */
+:root { --accent:#ff4fd8; --accent2:#3de7ff; --accent3:#a98bff; --glow:rgba(255,79,216,.14); }
+button, .btn, .seg button.on { color:#16020f; }
+.herokal { align-items:center; }
+.fig { margin:0; }
+.fig canvas { width:100%; height:auto; display:block; border:1px solid var(--line); border-radius:6px; background:#000; }
+.vis-head { display:flex; justify-content:space-between; align-items:flex-end; gap:16px; flex-wrap:wrap; }
+.vis-head h1 { margin-bottom:0; }
+.srcbar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:6px 0 4px; }
+.srcbar > button { margin:0; }
+.srcbar .seg button { margin:0; }
+.demo-row { align-items:center; margin:0 0 8px; } .demo-row .ctl { max-width:420px; }
+.ctl.chk label { display:flex; gap:8px; align-items:center; color:var(--ink); }
+.ctl.colr input { height:34px; padding:2px; max-width:120px; }
+.kal { margin:6px 0; }
+.kal:fullscreen { display:flex; align-items:center; justify-content:center; border:0; border-radius:0; }
+.kal:fullscreen canvas { width:100%; height:100%; object-fit:contain; }
+.freq { display:block; width:100%; background:#1e1e1e; border:1px solid var(--line); border-radius:4px; }
+.freq[hidden] { display:none; }
+.tabs { margin-bottom:12px; }
+.tabs button { margin:0; }
+.groups-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:12px; }
+fieldset.grp { border:1px solid var(--line); border-radius:6px; padding:8px 14px 12px; margin:0; min-width:0; }
+fieldset.grp legend { font:12px var(--mono); color:var(--accent2); letter-spacing:.1em; text-transform:uppercase; padding:0 6px; }
+.door b { color:var(--accent); }
+td.ok { color:var(--good); } td.err { color:var(--bad); }
+@media (max-width:760px) { .srcbar > button { padding:8px 10px; } }

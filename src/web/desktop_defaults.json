@@ -1,0 +1,1035 @@
+{
+ "source": "src/ui/control_panel.py (ControlPanel, read offscreen by src/web/desktop_defaults.py)",
+ "tabs": [
+  "Visual Controls",
+  "Technical Controls",
+  "Visualizations",
+  "Wireframe Shapes",
+  "Particle Effects",
+  "Experimental Effects"
+ ],
+ "controls": [
+  {
+   "name": "segments_slider",
+   "tab": "Visual Controls",
+   "group": "General Controls",
+   "label": "Segments",
+   "kind": "slider",
+   "min": 3,
+   "max": 24,
+   "value": 8
+  },
+  {
+   "name": "rotation_slider",
+   "tab": "Visual Controls",
+   "group": "General Controls",
+   "label": "Rotation",
+   "kind": "slider",
+   "min": 0,
+   "max": 100,
+   "value": 50
+  },
+  {
+   "name": "symmetry_combo",
+   "tab": "Visual Controls",
+   "group": "General Controls",
+   "label": "Symmetry",
+   "kind": "combo",
+   "items": [
+    "Radial",
+    "Mirror",
+    "Spiral"
+   ],
+   "value": "Radial"
+  },
+  {
+   "name": "color_mode_combo",
+   "tab": "Visual Controls",
+   "group": "Visual Effects",
+   "label": "Color Mode",
+   "kind": "combo",
+   "items": [
+    "Spectrum",
+    "Solid",
+    "Gradient"
+   ],
+   "value": "Spectrum"
+  },
+  {
+   "name": "base_color_btn",
+   "tab": "Visual Controls",
+   "group": "Visual Effects",
+   "label": "Base Color",
+   "kind": "color",
+   "value": "#FF007F"
+  },
+  {
+   "name": "secondary_color_btn",
+   "tab": "Visual Controls",
+   "group": "Visual Effects",
+   "label": "Secondary",
+   "kind": "color",
+   "value": "#007FFF"
+  },
+  {
+   "name": "shape_combo",
+   "tab": "Visual Controls",
+   "group": "Visual Effects",
+   "label": "Shape",
+   "kind": "combo",
+   "items": [
+    "Circle",
+    "Square",
+    "Triangle",
+    "Star"
+   ],
+   "value": "Circle"
+  },
+  {
+   "name": "blur_slider",
+   "tab": "Visual Controls",
+   "group": "Visual Effects",
+   "label": "Blur",
+   "kind": "slider",
+   "min": 0,
+   "max": 5,
+   "value": 0
+  },
+  {
+   "name": "distortion_slider",
+   "tab": "Visual Controls",
+   "group": "Visual Effects",
+   "label": "Distortion",
+   "kind": "slider",
+   "min": 0,
+   "max": 100,
+   "value": 0
+  },
+  {
+   "name": "particles_slider",
+   "tab": "Visual Controls",
+   "group": "Visual Effects",
+   "label": "Particles",
+   "kind": "slider",
+   "min": 10,
+   "max": 300,
+   "value": 100
+  },
+  {
+   "name": "size_slider",
+   "tab": "Visual Controls",
+   "group": "Visual Effects",
+   "label": "Size",
+   "kind": "slider",
+   "min": 1,
+   "max": 50,
+   "value": 10
+  },
+  {
+   "name": "trail_slider",
+   "tab": "Visual Controls",
+   "group": "Visual Effects",
+   "label": "Trails",
+   "kind": "slider",
+   "min": 1,
+   "max": 30,
+   "value": 5
+  },
+  {
+   "name": "fps_spin",
+   "tab": "Visual Controls",
+   "group": "Display Settings",
+   "label": "FPS",
+   "kind": "spin",
+   "min": 15,
+   "max": 120,
+   "value": 60
+  },
+  {
+   "name": "fullscreen_check",
+   "tab": "Visual Controls",
+   "group": "Display Settings",
+   "label": "Fullscreen",
+   "kind": "check",
+   "value": false,
+   "text": ""
+  },
+  {
+   "name": "monitor_combo",
+   "tab": "Visual Controls",
+   "group": "Display Settings",
+   "label": "Monitor",
+   "kind": "combo",
+   "items": [
+    "Monitor 1"
+   ],
+   "value": "Monitor 1"
+  },
+  {
+   "name": "freq_display_check",
+   "tab": "Visual Controls",
+   "group": "Display Settings",
+   "label": "Show Frequency",
+   "kind": "check",
+   "value": true,
+   "text": ""
+  },
+  {
+   "name": "freq_height_slider",
+   "tab": "Visual Controls",
+   "group": "Display Settings",
+   "label": "Freq. Height",
+   "kind": "slider",
+   "min": 50,
+   "max": 300,
+   "value": 150
+  },
+  {
+   "name": "enable_3d_check",
+   "tab": "Technical Controls",
+   "group": "3D Effects",
+   "label": "Enable 3D",
+   "kind": "check",
+   "value": true,
+   "text": ""
+  },
+  {
+   "name": "depth_slider",
+   "tab": "Technical Controls",
+   "group": "3D Effects",
+   "label": "Depth Effect",
+   "kind": "slider",
+   "min": 0,
+   "max": 200,
+   "value": 100
+  },
+  {
+   "name": "perspective_slider",
+   "tab": "Technical Controls",
+   "group": "3D Effects",
+   "label": "Perspective",
+   "kind": "slider",
+   "min": 300,
+   "max": 1500,
+   "value": 800
+  },
+  {
+   "name": "enable_pulse_check",
+   "tab": "Technical Controls",
+   "group": "Pulse System",
+   "label": "Enable Pulse",
+   "kind": "check",
+   "value": true,
+   "text": ""
+  },
+  {
+   "name": "pulse_strength_slider",
+   "tab": "Technical Controls",
+   "group": "Pulse System",
+   "label": "Strength",
+   "kind": "slider",
+   "min": 0,
+   "max": 200,
+   "value": 100
+  },
+  {
+   "name": "pulse_attack_slider",
+   "tab": "Technical Controls",
+   "group": "Pulse System",
+   "label": "Attack",
+   "kind": "slider",
+   "min": 1,
+   "max": 50,
+   "value": 10
+  },
+  {
+   "name": "pulse_decay_slider",
+   "tab": "Technical Controls",
+   "group": "Pulse System",
+   "label": "Decay",
+   "kind": "slider",
+   "min": 1,
+   "max": 50,
+   "value": 20
+  },
+  {
+   "name": "sensitivity_slider",
+   "tab": "Technical Controls",
+   "group": "Audio Controls",
+   "label": "Sensitivity",
+   "kind": "slider",
+   "min": 10,
+   "max": 500,
+   "value": 100
+  },
+  {
+   "name": "smoothing_slider",
+   "tab": "Technical Controls",
+   "group": "Audio Controls",
+   "label": "Smoothing",
+   "kind": "slider",
+   "min": 0,
+   "max": 95,
+   "value": 30
+  },
+  {
+   "name": "bass_slider",
+   "tab": "Technical Controls",
+   "group": "Audio Controls",
+   "label": "Bass",
+   "kind": "slider",
+   "min": 0,
+   "max": 200,
+   "value": 100
+  },
+  {
+   "name": "mids_slider",
+   "tab": "Technical Controls",
+   "group": "Audio Controls",
+   "label": "Mids",
+   "kind": "slider",
+   "min": 0,
+   "max": 200,
+   "value": 100
+  },
+  {
+   "name": "highs_slider",
+   "tab": "Technical Controls",
+   "group": "Audio Controls",
+   "label": "Highs",
+   "kind": "slider",
+   "min": 0,
+   "max": 200,
+   "value": 100
+  },
+  {
+   "name": "enable_waveform_check",
+   "tab": "Visualizations",
+   "group": "Circular Waveform",
+   "label": "Show Waveform",
+   "kind": "check",
+   "value": true,
+   "text": ""
+  },
+  {
+   "name": "waveform_radius_slider",
+   "tab": "Visualizations",
+   "group": "Circular Waveform",
+   "label": "Inner Radius",
+   "kind": "slider",
+   "min": 50,
+   "max": 95,
+   "value": 80
+  },
+  {
+   "name": "waveform_width_slider",
+   "tab": "Visualizations",
+   "group": "Circular Waveform",
+   "label": "Line Width",
+   "kind": "slider",
+   "min": 1,
+   "max": 10,
+   "value": 2
+  },
+  {
+   "name": "waveform_rotation_slider",
+   "tab": "Visualizations",
+   "group": "Circular Waveform",
+   "label": "Rotation",
+   "kind": "slider",
+   "min": 0,
+   "max": 50,
+   "value": 10
+  },
+  {
+   "name": "waveform_amplitude_slider",
+   "tab": "Visualizations",
+   "group": "Circular Waveform",
+   "label": "Amplitude",
+   "kind": "slider",
+   "min": 50,
+   "max": 300,
+   "value": 100
+  },
+  {
+   "name": "waveform_color_combo",
+   "tab": "Visualizations",
+   "group": "Circular Waveform",
+   "label": "Color Mode",
+   "kind": "combo",
+   "items": [
+    "Gradient",
+    "Solid"
+   ],
+   "value": "Gradient"
+  },
+  {
+   "name": "waveform_color_btn",
+   "tab": "Visualizations",
+   "group": "Circular Waveform",
+   "label": "Primary Color",
+   "kind": "color",
+   "value": "#FFFFFF"
+  },
+  {
+   "name": "waveform_secondary_color_btn",
+   "tab": "Visualizations",
+   "group": "Circular Waveform",
+   "label": "Secondary Color",
+   "kind": "color",
+   "value": "#00C8FF"
+  },
+  {
+   "name": "waveform_reflection_check",
+   "tab": "Visualizations",
+   "group": "Circular Waveform",
+   "label": "Show Reflection",
+   "kind": "check",
+   "value": true,
+   "text": ""
+  },
+  {
+   "name": "waveform_reflection_slider",
+   "tab": "Visualizations",
+   "group": "Circular Waveform",
+   "label": "Refl. Opacity",
+   "kind": "slider",
+   "min": 10,
+   "max": 100,
+   "value": 30
+  },
+  {
+   "name": "enable_wireframe_check",
+   "tab": "Wireframe Shapes",
+   "group": "Wireframe Shapes",
+   "label": "Show Wireframe",
+   "kind": "check",
+   "value": true,
+   "text": ""
+  },
+  {
+   "name": "wireframe_edges_check",
+   "tab": "Wireframe Shapes",
+   "group": "Wireframe Shapes",
+   "label": "Show Edges",
+   "kind": "check",
+   "value": true,
+   "text": ""
+  },
+  {
+   "name": "wireframe_shape_combo",
+   "tab": "Wireframe Shapes",
+   "group": "Wireframe Shapes",
+   "label": "Shape",
+   "kind": "combo",
+   "items": [
+    "Cube",
+    "Pyramid",
+    "Sphere",
+    "Octahedron",
+    "Dodecahedron",
+    "Tetrahedron",
+    "Torus"
+   ],
+   "value": "Cube"
+  },
+  {
+   "name": "wireframe_morph_check",
+   "tab": "Wireframe Shapes",
+   "group": "Wireframe Shapes",
+   "label": "Morph on Change",
+   "kind": "check",
+   "value": true,
+   "text": ""
+  },
+  {
+   "name": "wireframe_size_slider",
+   "tab": "Wireframe Shapes",
+   "group": "Wireframe Shapes",
+   "label": "Size",
+   "kind": "slider",
+   "min": 50,
+   "max": 300,
+   "value": 100
+  },
+  {
+   "name": "wireframe_rotation_slider",
+   "tab": "Wireframe Shapes",
+   "group": "Wireframe Shapes",
+   "label": "Rotation Speed",
+   "kind": "slider",
+   "min": 0,
+   "max": 200,
+   "value": 100
+  },
+  {
+   "name": "wireframe_color_combo",
+   "tab": "Wireframe Shapes",
+   "group": "Wireframe Effects",
+   "label": "Color Mode",
+   "kind": "combo",
+   "items": [
+    "Audio Reactive",
+    "Solid",
+    "Rainbow",
+    "Gradient"
+   ],
+   "value": "Audio Reactive"
+  },
+  {
+   "name": "wireframe_color_btn",
+   "tab": "Wireframe Shapes",
+   "group": "Wireframe Effects",
+   "label": "Primary Color",
+   "kind": "color",
+   "value": "#FFFFFF"
+  },
+  {
+   "name": "wireframe_secondary_color_btn",
+   "tab": "Wireframe Shapes",
+   "group": "Wireframe Effects",
+   "label": "Secondary Color",
+   "kind": "color",
+   "value": "#00C8FF"
+  },
+  {
+   "name": "wireframe_vertices_check",
+   "tab": "Wireframe Shapes",
+   "group": "Wireframe Effects",
+   "label": "Show Vertices",
+   "kind": "check",
+   "value": false,
+   "text": ""
+  },
+  {
+   "name": "wireframe_vertex_slider",
+   "tab": "Wireframe Shapes",
+   "group": "Wireframe Effects",
+   "label": "Vertex Size",
+   "kind": "slider",
+   "min": 1,
+   "max": 10,
+   "value": 3
+  },
+  {
+   "name": "wireframe_glow_check",
+   "tab": "Wireframe Shapes",
+   "group": "Wireframe Effects",
+   "label": "Edge Glow",
+   "kind": "check",
+   "value": false,
+   "text": ""
+  },
+  {
+   "name": "wireframe_glow_slider",
+   "tab": "Wireframe Shapes",
+   "group": "Wireframe Effects",
+   "label": "Glow Intensity",
+   "kind": "slider",
+   "min": 10,
+   "max": 100,
+   "value": 50
+  },
+  {
+   "name": "wireframe_multi_check",
+   "tab": "Wireframe Shapes",
+   "group": "Advanced Wireframe",
+   "label": "Multiple Shapes",
+   "kind": "check",
+   "value": false,
+   "text": ""
+  },
+  {
+   "name": "wireframe_count_slider",
+   "tab": "Wireframe Shapes",
+   "group": "Advanced Wireframe",
+   "label": "Shape Count",
+   "kind": "slider",
+   "min": 2,
+   "max": 10,
+   "value": 3
+  },
+  {
+   "name": "wireframe_echo_check",
+   "tab": "Wireframe Shapes",
+   "group": "Advanced Wireframe",
+   "label": "Show Echo",
+   "kind": "check",
+   "value": false,
+   "text": ""
+  },
+  {
+   "name": "wireframe_echo_count_slider",
+   "tab": "Wireframe Shapes",
+   "group": "Advanced Wireframe",
+   "label": "Echo Count",
+   "kind": "slider",
+   "min": 1,
+   "max": 10,
+   "value": 3
+  },
+  {
+   "name": "wireframe_echo_opacity_slider",
+   "tab": "Wireframe Shapes",
+   "group": "Advanced Wireframe",
+   "label": "Echo Opacity",
+   "kind": "slider",
+   "min": 10,
+   "max": 80,
+   "value": 30
+  },
+  {
+   "name": "wireframe_auto_morph_check",
+   "tab": "Wireframe Shapes",
+   "group": "Advanced Wireframe",
+   "label": "Auto Morph",
+   "kind": "check",
+   "value": false,
+   "text": ""
+  },
+  {
+   "name": "wireframe_beat_morph_check",
+   "tab": "Wireframe Shapes",
+   "group": "Advanced Wireframe",
+   "label": "Morph on Beat",
+   "kind": "check",
+   "value": false,
+   "text": ""
+  },
+  {
+   "name": "enable_effects_check",
+   "tab": "Particle Effects",
+   "group": "Particle Effects",
+   "label": "Enable Effects",
+   "kind": "check",
+   "value": true,
+   "text": ""
+  },
+  {
+   "name": "effects_intensity_slider",
+   "tab": "Particle Effects",
+   "group": "Particle Effects",
+   "label": "Intensity",
+   "kind": "slider",
+   "min": 10,
+   "max": 200,
+   "value": 100
+  },
+  {
+   "name": "effects_beat_check",
+   "tab": "Particle Effects",
+   "group": "Particle Effects",
+   "label": "On Beat",
+   "kind": "check",
+   "value": true,
+   "text": ""
+  },
+  {
+   "name": "effects_beat_threshold_slider",
+   "tab": "Particle Effects",
+   "group": "Particle Effects",
+   "label": "Beat Sensitivity",
+   "kind": "slider",
+   "min": 10,
+   "max": 90,
+   "value": 50
+  },
+  {
+   "name": "effects_random_check",
+   "tab": "Particle Effects",
+   "group": "Particle Effects",
+   "label": "Random Effects",
+   "kind": "check",
+   "value": true,
+   "text": ""
+  },
+  {
+   "name": "effects_random_slider",
+   "tab": "Particle Effects",
+   "group": "Particle Effects",
+   "label": "Random Rate",
+   "kind": "slider",
+   "min": 1,
+   "max": 20,
+   "value": 10
+  },
+  {
+   "name": "effect_spark_check",
+   "tab": "Particle Effects",
+   "group": "Effect Types",
+   "label": "Sparks",
+   "kind": "check",
+   "value": true,
+   "text": ""
+  },
+  {
+   "name": "effect_spark_weight_slider",
+   "tab": "Particle Effects",
+   "group": "Effect Types",
+   "label": "Sparks",
+   "kind": "slider",
+   "min": 0,
+   "max": 100,
+   "value": 40
+  },
+  {
+   "name": "effect_flare_check",
+   "tab": "Particle Effects",
+   "group": "Effect Types",
+   "label": "Flares",
+   "kind": "check",
+   "value": true,
+   "text": ""
+  },
+  {
+   "name": "effect_flare_weight_slider",
+   "tab": "Particle Effects",
+   "group": "Effect Types",
+   "label": "Flares",
+   "kind": "slider",
+   "min": 0,
+   "max": 100,
+   "value": 30
+  },
+  {
+   "name": "effect_firework_check",
+   "tab": "Particle Effects",
+   "group": "Effect Types",
+   "label": "Fireworks",
+   "kind": "check",
+   "value": true,
+   "text": ""
+  },
+  {
+   "name": "effect_firework_weight_slider",
+   "tab": "Particle Effects",
+   "group": "Effect Types",
+   "label": "Fireworks",
+   "kind": "slider",
+   "min": 0,
+   "max": 100,
+   "value": 15
+  },
+  {
+   "name": "effect_mist_check",
+   "tab": "Particle Effects",
+   "group": "Effect Types",
+   "label": "Mist",
+   "kind": "check",
+   "value": true,
+   "text": ""
+  },
+  {
+   "name": "effect_mist_weight_slider",
+   "tab": "Particle Effects",
+   "group": "Effect Types",
+   "label": "Mist",
+   "kind": "slider",
+   "min": 0,
+   "max": 100,
+   "value": 15
+  },
+  {
+   "name": "tunnel_enable_check",
+   "tab": "Particle Effects",
+   "group": "Particle Tunnel",
+   "label": "Enable Tunnel",
+   "kind": "check",
+   "value": false,
+   "text": ""
+  },
+  {
+   "name": "tunnel_auto_change_check",
+   "tab": "Particle Effects",
+   "group": "Particle Tunnel",
+   "label": "Auto-change",
+   "kind": "check",
+   "value": true,
+   "text": ""
+  },
+  {
+   "name": "tunnel_interval_slider",
+   "tab": "Particle Effects",
+   "group": "Particle Tunnel",
+   "label": "Change Interval",
+   "kind": "slider",
+   "min": 300,
+   "max": 1200,
+   "value": 600
+  },
+  {
+   "name": "tunnel_direction_combo",
+   "tab": "Particle Effects",
+   "group": "Particle Tunnel",
+   "label": "Flow Direction",
+   "kind": "combo",
+   "items": [
+    "Auto",
+    "Inward",
+    "Outward"
+   ],
+   "value": "Auto"
+  },
+  {
+   "name": "effects_bass_slider",
+   "tab": "Particle Effects",
+   "group": "Effects Reactivity",
+   "label": "Bass",
+   "kind": "slider",
+   "min": 0,
+   "max": 200,
+   "value": 100
+  },
+  {
+   "name": "effects_mids_slider",
+   "tab": "Particle Effects",
+   "group": "Effects Reactivity",
+   "label": "Mids",
+   "kind": "slider",
+   "min": 0,
+   "max": 200,
+   "value": 70
+  },
+  {
+   "name": "effects_highs_slider",
+   "tab": "Particle Effects",
+   "group": "Effects Reactivity",
+   "label": "Highs",
+   "kind": "slider",
+   "min": 0,
+   "max": 200,
+   "value": 50
+  },
+  {
+   "name": "effects_volume_slider",
+   "tab": "Particle Effects",
+   "group": "Effects Reactivity",
+   "label": "Volume",
+   "kind": "slider",
+   "min": 0,
+   "max": 200,
+   "value": 80
+  },
+  {
+   "name": "dimensional_enable_check",
+   "tab": "Experimental Effects",
+   "group": "Dimensional Portal",
+   "label": "Enable",
+   "kind": "check",
+   "value": false,
+   "text": ""
+  },
+  {
+   "name": "dimensional_intensity_slider",
+   "tab": "Experimental Effects",
+   "group": "Dimensional Portal",
+   "label": "Intensity",
+   "kind": "slider",
+   "min": 1,
+   "max": 100,
+   "value": 80
+  },
+  {
+   "name": "dimensional_inner_color_btn",
+   "tab": "Experimental Effects",
+   "group": "Dimensional Portal",
+   "label": "Inner Color",
+   "kind": "color",
+   "value": "#140028"
+  },
+  {
+   "name": "dimensional_outer_color_btn",
+   "tab": "Experimental Effects",
+   "group": "Dimensional Portal",
+   "label": "Outer Color",
+   "kind": "color",
+   "value": "#6400FF"
+  },
+  {
+   "name": "dimensional_glow_color_btn",
+   "tab": "Experimental Effects",
+   "group": "Dimensional Portal",
+   "label": "Glow Color",
+   "kind": "color",
+   "value": "#B478FF"
+  },
+  {
+   "name": "liquid_metal_enable_check",
+   "tab": "Experimental Effects",
+   "group": "Liquid Metal",
+   "label": "Enable",
+   "kind": "check",
+   "value": false,
+   "text": ""
+  },
+  {
+   "name": "liquid_metal_intensity_slider",
+   "tab": "Experimental Effects",
+   "group": "Liquid Metal",
+   "label": "Intensity",
+   "kind": "slider",
+   "min": 1,
+   "max": 100,
+   "value": 80
+  },
+  {
+   "name": "liquid_metal_color_btn",
+   "tab": "Experimental Effects",
+   "group": "Liquid Metal",
+   "label": "Metal Color",
+   "kind": "color",
+   "value": "#C8C8DC"
+  },
+  {
+   "name": "liquid_highlight_color_btn",
+   "tab": "Experimental Effects",
+   "group": "Liquid Metal",
+   "label": "Highlight",
+   "kind": "color",
+   "value": "#FFFFFF"
+  },
+  {
+   "name": "liquid_shadow_color_btn",
+   "tab": "Experimental Effects",
+   "group": "Liquid Metal",
+   "label": "Shadow",
+   "kind": "color",
+   "value": "#464664"
+  },
+  {
+   "name": "mycelia_enable_check",
+   "tab": "Experimental Effects",
+   "group": "Audio Mycelia",
+   "label": "Enable",
+   "kind": "check",
+   "value": false,
+   "text": ""
+  },
+  {
+   "name": "mycelia_intensity_slider",
+   "tab": "Experimental Effects",
+   "group": "Audio Mycelia",
+   "label": "Intensity",
+   "kind": "slider",
+   "min": 1,
+   "max": 100,
+   "value": 80
+  },
+  {
+   "name": "mycelia_growth_slider",
+   "tab": "Experimental Effects",
+   "group": "Audio Mycelia",
+   "label": "Growth Rate",
+   "kind": "slider",
+   "min": 50,
+   "max": 300,
+   "value": 150
+  },
+  {
+   "name": "mycelia_base_color_btn",
+   "tab": "Experimental Effects",
+   "group": "Audio Mycelia",
+   "label": "Base Color",
+   "kind": "color",
+   "value": "#50DC78"
+  },
+  {
+   "name": "mycelia_tip_color_btn",
+   "tab": "Experimental Effects",
+   "group": "Audio Mycelia",
+   "label": "Tip Color",
+   "kind": "color",
+   "value": "#DCFFC8"
+  },
+  {
+   "name": "mycelia_bg_color_btn",
+   "tab": "Experimental Effects",
+   "group": "Audio Mycelia",
+   "label": "Background",
+   "kind": "color",
+   "value": "#0A140A"
+  },
+  {
+   "name": "mycelia_bg_opacity_slider",
+   "tab": "Experimental Effects",
+   "group": "Audio Mycelia",
+   "label": "BG Opacity",
+   "kind": "slider",
+   "min": 0,
+   "max": 200,
+   "value": 100
+  },
+  {
+   "name": "lens_enable_check",
+   "tab": "Experimental Effects",
+   "group": "Reality Distortion",
+   "label": "Enable",
+   "kind": "check",
+   "value": false,
+   "text": ""
+  },
+  {
+   "name": "lens_intensity_slider",
+   "tab": "Experimental Effects",
+   "group": "Reality Distortion",
+   "label": "Intensity",
+   "kind": "slider",
+   "min": 1,
+   "max": 100,
+   "value": 80
+  },
+  {
+   "name": "lens_distortion_slider",
+   "tab": "Experimental Effects",
+   "group": "Reality Distortion",
+   "label": "Distortion",
+   "kind": "slider",
+   "min": 10,
+   "max": 200,
+   "value": 100
+  },
+  {
+   "name": "lens_grid_color_btn",
+   "tab": "Experimental Effects",
+   "group": "Reality Distortion",
+   "label": "Grid Color",
+   "kind": "color",
+   "value": "#323250"
+  },
+  {
+   "name": "lens_center_color_btn",
+   "tab": "Experimental Effects",
+   "group": "Reality Distortion",
+   "label": "Lens Color",
+   "kind": "color",
+   "value": "#6496FF"
+  },
+  {
+   "name": "lens_edge_color_btn",
+   "tab": "Experimental Effects",
+   "group": "Reality Distortion",
+   "label": "Edge Color",
+   "kind": "color",
+   "value": "#3264C8"
+  },
+  {
+   "name": "lens_grid_check",
+   "tab": "Experimental Effects",
+   "group": "Reality Distortion",
+   "label": "Show Grid",
+   "kind": "check",
+   "value": true,
+   "text": ""
+  },
+  {
+   "name": "experimental_opacity_slider",
+   "tab": "Experimental Effects",
+   "group": "Global Settings",
+   "label": "Opacity",
+   "kind": "slider",
+   "min": 10,
+   "max": 100,
+   "value": 80
+  }
+ ]
+}

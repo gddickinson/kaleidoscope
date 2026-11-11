@@ -2,7 +2,7 @@
 
 A real-time audio visualization application that creates mesmerizing kaleidoscope patterns synchronized to music. This application uses PyQt5 for rendering and PyAudio for real-time audio processing.
 
-![Kaleidoscope Visualizer](https://via.placeholder.com/800x450.png?text=Kaleidoscope+Visualizer)
+![Kaleidoscope Visualizer (web version)](docs/img/visualiser.png)
 
 ## Features
 
@@ -98,6 +98,36 @@ implemented them. The web version below does offer them.)
 │       ├── debug_console.py               # Debugging tools
 │       └── widgets.py                     # Visualization display widgets
 └── requirements.txt        # Project dependencies
+```
+
+## Web version
+
+The visualiser also runs in the browser: **https://gddickinson.github.io/kaleidoscope/** (published from `main` by
+GitHub Pages). It is a JavaScript port of the engine (particles, symmetry, waveform ring, wireframes, particle effects)
+and of the audio analysis, with the desktop control panel's controls and defaults read from the real `ControlPanel`.
+Drive it with the built-in demo loop, an audio file of your own, or the microphone (only after you click it).
+The Verify page replays seeded runs of the Python engine in the browser and compares every value.
+Not ported: the particle tunnel and the experimental effects (all off by default on the desktop).
+
+| Home | Visualiser | Verify |
+|---|---|---|
+| ![Home](docs/img/home.png) | ![Visualiser](docs/img/visualiser.png) | ![Verify](docs/img/verify.png) |
+
+### Run the web app
+
+```
+pip install -r requirements-web.txt
+python run_web.py            # http://127.0.0.1:8224
+```
+
+The local app adds one thing the static site cannot do: on the Verify page, your own audio is analysed by the
+Python `analyze_chunk` as well as in JS. Developer commands:
+
+```
+python -m pytest -q tests/                   # all tests (node tests run if node is installed)
+python scripts/make_fixtures.py              # regenerate Python reference data (needs PyQt5)
+python scripts/build_static.py --out site    # build the static site
+python scripts/screenshots.py --static "" visualiser verify about   # browser smoke test (Playwright)
 ```
 
 ## Performance Tips
